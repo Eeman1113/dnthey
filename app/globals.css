@@ -50,10 +50,10 @@
   --rubric:         #FE5F55;   /* Vibrant Coral, 5.95:1. Accent: selected, active */
   --rubric-solid:   #FE5F55;
   --on-rubric:      #1A0F10;   /*  6.2:1 on coral. NOT white: white is 3.0:1   */
-  --gold:           #C6ECAE;   /* Tea Green, 13.65:1. The "illuminated" note  */
+  --gold:           #DDA94B;   /*  8.4:1. Precious only: legendary, criticals   */
 
-  --verdigris:      #94C9A9;   /* Muted Teal, 9.5:1  */
-  --success:        #94C9A9;
+  --verdigris:      #94C9A9;   /* Muted Teal  9.5:1. Uncommon rarity           */
+  --success:        #C6ECAE;   /* Tea Green  13.7:1. Live positive state       */
   --info:           #8E93B8;   /* Glaucous lifted, 6.0:1 (raw #777DA7 is 4.50:1) */
   --warning:        #FE5F55;   /* shares the accent hue, see note on .issue-warn */
   --rose:           #885053;   /* Smoky Rose, FILL ONLY on dark (2.9:1 as text) */
@@ -84,10 +84,10 @@
     --rubric:       #A80A00;   /* coral darkened    , 7.2:1 */
     --rubric-solid: #A80A00;
     --on-rubric:    #FFFFFF;   /*  7.0:1 on that fill        */
-    --gold:         #3C6E1C;   /* tea green darkened, 5.7:1 */
+    --gold:         #7C530E;   /*  6.3:1 on panel, 5.4:1 on raised */
 
-    --verdigris:    #206F3F;   /* teal darkened     , 5.8:1 */
-    --success:      #206F3F;
+    --verdigris:    #206F3F;   /* teal darkened   5.8:1. Uncommon rarity */
+    --success:      #3C6E1C;   /* tea green dark  5.7:1. Live positive    */
     --info:         #29368E;   /* glaucous darkened , 9.7:1 */
     --warning:      #A80A00;
     --rose:         #633638;   /*  9.3:1, usable as text on light */
@@ -117,10 +117,10 @@
   --rubric:       #A80A00;   /* coral darkened    , 7.2:1 */
   --rubric-solid: #A80A00;
   --on-rubric:    #FFFFFF;   /*  7.0:1 on that fill        */
-  --gold:         #3C6E1C;   /* tea green darkened, 5.7:1 */
+  --gold:         #7C530E;   /*  6.3:1 on panel, 5.4:1 on raised */
 
-  --verdigris:    #206F3F;   /* teal darkened     , 5.8:1 */
-  --success:      #206F3F;
+  --verdigris:    #206F3F;   /* teal darkened   5.8:1. Uncommon rarity */
+  --success:      #3C6E1C;   /* tea green dark  5.7:1. Live positive    */
   --info:         #29368E;   /* glaucous darkened , 9.7:1 */
   --warning:      #A80A00;
   --rose:         #633638;   /*  9.3:1, usable as text on light */
