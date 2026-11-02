@@ -33,6 +33,24 @@
   --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
 }
 
+/*
+  Safe area insets, read once into tokens.
+
+  Two reasons not to call env() at each site. First, env() cannot be read or
+  overridden from script, so any layout depending on it directly is impossible
+  to verify without the hardware; routed through a variable, a test can
+  substitute a real device's numbers and check the layout holds. Second, three
+  rules previously used `env(safe-area-inset-left)` inside a padding shorthand,
+  which applies it to BOTH sides: correct in portrait where the insets match,
+  wrong in landscape on a notched phone where they do not.
+*/
+:root {
+  --sai-top: env(safe-area-inset-top, 0px);
+  --sai-right: env(safe-area-inset-right, 0px);
+  --sai-bottom: env(safe-area-inset-bottom, 0px);
+  --sai-left: env(safe-area-inset-left, 0px);
+}
+
 :root {
   /* ---- DARK. Surfaces are derived from Smoky Rose's hue (357 deg) at low
      saturation, so the ground belongs to the palette instead of being a
@@ -555,8 +573,8 @@ input[type="text"]:focus, textarea:focus, select:focus {
 /* Page gutters that also clear a notch or a rounded corner.
    layout.md › Guides and safe areas. */
 .gutter {
-  padding-left: max(var(--gutter), env(safe-area-inset-left));
-  padding-right: max(var(--gutter), env(safe-area-inset-right));
+  padding-left: max(var(--gutter), var(--sai-left));
+  padding-right: max(var(--gutter), var(--sai-right));
 }
 
 /* dvh so the hero is not cut off by the collapsing browser toolbar. */
@@ -720,7 +738,7 @@ input[type="text"]:focus, textarea:focus, select:focus {
   .create-grid {
     grid-template-columns: minmax(0, 1fr);
     /* Clear the fixed dock so the last control is never unreachable. */
-    padding-bottom: calc(var(--dock-h) + env(safe-area-inset-bottom) + 1rem);
+    padding-bottom: calc(var(--dock-h) + var(--sai-bottom) + 1rem);
   }
 }
 
@@ -814,14 +832,14 @@ input[type="text"]:focus, textarea:focus, select:focus {
     border-top: 1px solid var(--hairline-lit);
     border-radius: 14px 14px 0 0;
     box-shadow: var(--shadow);
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-bottom: var(--sai-bottom);
   }
   .live-aside__scroll {
     display: none;
     overflow-y: auto;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
-    padding: 0 max(var(--gutter), env(safe-area-inset-left)) 0.75rem;
+    padding: 0 max(var(--gutter), var(--sai-right)) 0.75rem max(var(--gutter), var(--sai-left));
   }
   .live-aside[data-open="true"] .live-aside__scroll {
     display: flex;
@@ -852,7 +870,7 @@ input[type="text"]:focus, textarea:focus, select:focus {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.15rem 0.75rem;
-  padding: 0.75rem max(var(--gutter), env(safe-area-inset-left)) 0.6rem;
+  padding: 0.75rem max(var(--gutter), var(--sai-right)) 0.6rem max(var(--gutter), var(--sai-left));
   background: transparent;
   border: 0;
   border-radius: 14px 14px 0 0;
@@ -896,7 +914,7 @@ input[type="text"]:focus, textarea:focus, select:focus {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.1rem max(var(--gutter), env(safe-area-inset-left)) 0.75rem;
+  padding: 0.1rem max(var(--gutter), var(--sai-right)) 0.75rem max(var(--gutter), var(--sai-left));
 }
 .dock-action > .btn { flex: 1 1 auto; min-height: 48px; }
 /* Confirmation after the action, on its own row. Empty until there is
@@ -1084,7 +1102,7 @@ input[type="text"]:focus, textarea:focus, select:focus {
    which is the one-handed-reach point in layout.md. */
 .select-bar {
   position: sticky;
-  bottom: max(0.75rem, env(safe-area-inset-bottom));
+  bottom: max(0.75rem, var(--sai-bottom));
   z-index: 30;
   margin-top: 1.25rem;
   background: color-mix(in srgb, var(--panel) 92%, transparent);
@@ -1275,7 +1293,7 @@ input[type="text"]:focus, textarea:focus, select:focus {
 .play__action {
   position: sticky; bottom: 0; z-index: 20;
   display: flex; gap: 0.6rem;
-  padding-block: 0.75rem max(0.75rem, env(safe-area-inset-bottom));
+  padding-block: 0.75rem max(0.75rem, var(--sai-bottom));
   background: linear-gradient(180deg, transparent, var(--surface) 35%);
 }
 .play__action input { flex: 1; }

@@ -229,8 +229,8 @@ export function HintLayer() {
           // Placed by the layout effect above; hidden until then so the
           // unplaced position is never painted.
           style={{
-            left: 'max(0.75rem, env(safe-area-inset-left))',
-            right: 'max(0.75rem, env(safe-area-inset-right))',
+            left: 'max(0.75rem, var(--sai-left))',
+            right: 'max(0.75rem, var(--sai-right))',
             top: 0,
             visibility: 'hidden',
           }}
