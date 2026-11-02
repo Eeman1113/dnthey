@@ -146,7 +146,14 @@ export function openingBeat(foes: Monster[], threat: string): Beat {
   const counts = new Map<string, number>();
   for (const f of foes) counts.set(f.name, (counts.get(f.name) ?? 0) + 1);
   const WORDS = ['', '', 'two', 'three', 'four', 'five', 'six'];
-  const names = [...counts].map(([n, c]) => (c === 1 ? n : `${WORDS[c] ?? c} ${n}s`)).join(', ');
+  // English plurals the naive way produce "two Wolfs".
+  const plural = (n: string) =>
+    /f$/i.test(n) ? n.replace(/f$/i, 'ves')
+    : /(s|x|z|ch|sh)$/i.test(n) ? `${n}es`
+    : `${n}s`;
+  const names = [...counts]
+    .map(([n, c]) => (c === 1 ? n : `${WORDS[c] ?? c} ${plural(n)}`))
+    .join(', ');
 
   // The model's threat line is flavour and the stat blocks are mechanics. If
   // they disagree, print only the mechanics rather than contradicting
@@ -154,6 +161,32 @@ export function openingBeat(foes: Monster[], threat: string): Beat {
   const agrees = threat.trim() && [...counts.keys()]
     .some((n) => threat.toLowerCase().includes(n.toLowerCase()));
   return beat('combat', agrees ? `${threat}. Roll initiative.` : `${names}. Roll initiative.`);
+}
+
+/**
+ * Run whoever is ahead of the player in the initiative order.
+ *
+ * Without this the player always acted first no matter what they rolled,
+ * which quietly threw away the initiative roll the tracker was showing them.
+ */
+export async function runUpToPlayer(
+  campaign: Campaign, state: CombatState, foes: Monster[], h: BeatHandlers,
+): Promise<CombatState> {
+  let s = { ...state, order: state.order.map((c) => ({ ...c })) };
+  let guard = 0;
+  while (!s.over && s.order[s.turn]!.id !== 'pc' && guard++ < 24) {
+    const actor = s.order[s.turn]!;
+    const other: Combatant['side'] = actor.side === 'party' ? 'foe' : 'party';
+    const options = living(s, other);
+    if (options.length) {
+      const rng = new Rng(`${campaign.seed}:${s.id}:${s.round}:${s.turn}:open`);
+      h.onBeat(beat('combat', describeAttack(resolveAttack(s, campaign.seed, actor, rng.pick(options)))));
+      s = checkEnd(s, foes);
+    }
+    if (s.over) break;
+    s = advance(s);
+  }
+  return s;
 }
 
 /** One attack by the player, then every other combatant takes its turn. */

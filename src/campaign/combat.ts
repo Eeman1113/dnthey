@@ -70,8 +70,17 @@ export function startCombat(campaign: Campaign, foes: Monster[]): CombatState {
     });
   }
 
+  // Number duplicates per type, so two wolves are Wolf 1 and Wolf 2 rather
+  // than taking their number from a position in the mixed list.
+  const seen = new Map<string, number>();
+  const total = new Map<string, number>();
+  for (const m of foes) total.set(m.id, (total.get(m.id) ?? 0) + 1);
+
   const enemies: Combatant[] = foes.map((m, i) => ({
-    id: `${m.id}-${i}`, name: foes.filter((f) => f.id === m.id).length > 1 ? `${m.name} ${i + 1}` : m.name,
+    id: `${m.id}-${i}`,
+    name: (total.get(m.id) ?? 1) > 1
+      ? `${m.name} ${(seen.set(m.id, (seen.get(m.id) ?? 0) + 1), seen.get(m.id))}`
+      : m.name,
     side: 'foe', ac: m.ac, hp: m.hp, maxHp: m.hp,
     initiative: rollD20(rng, { kind: 'initiative', modifiers: [{ label: 'DEX', value: 1 }], reason: 'initiative' }).total,
     monsterId: m.id, doctrine: m.doctrine, attack: m.attack,

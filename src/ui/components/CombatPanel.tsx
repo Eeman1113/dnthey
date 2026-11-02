@@ -63,9 +63,13 @@ function Row({ c, active }: { c: Combatant; active: boolean }) {
   return (
     <li className="combat__row" data-active={active} data-down={down || c.fled}>
       <span className="combat__init stat-num">{c.initiative}</span>
-      {c.portraitId
-        ? <Art className="combat__art" src={`/assets/classart/${c.portraitId}`} alt="" width={384} height={384} sizes="30px" />
-        : <span className="combat__art combat__art--foe" aria-hidden />}
+      {c.portraitId ? (
+        <Art className="combat__art" src={`/assets/classart/${c.portraitId}`} alt="" width={384} height={384} sizes="30px" />
+      ) : c.monsterId ? (
+        <Art className="combat__art" src={`/assets/monsters/${c.monsterId}`} alt="" width={384} height={384} sizes="30px" />
+      ) : (
+        <span className="combat__art combat__art--foe" aria-hidden />
+      )}
       <span className="combat__name">
         {c.name}
         {c.fled && <span className="meta-quiet"> fled</span>}

@@ -121,3 +121,36 @@ describe('combat', () => {
     expect(living(s, 'foe')).toHaveLength(1);
   });
 });
+
+describe('monster art', () => {
+  it('every playable monster has a cutout on disk', async () => {
+    const { MONSTERS } = await import('@/data/srd/encounters');
+    const { existsSync } = await import('node:fs');
+    const missing = MONSTERS.filter(
+      (m) => !existsSync(`public/assets/monsters/${m.id}.webp`)
+          || !existsSync(`public/assets/monsters/${m.id}.avif`),
+    );
+    expect(missing.map((m) => m.id)).toEqual([]);
+  });
+});
+
+describe('naming', () => {
+  it('numbers duplicates per type, not by position in the list', async () => {
+    const { startCombat } = await import('./combat');
+    const { MONSTERS_BY_ID } = await import('@/data/srd/encounters');
+    const s = startCombat(campaign(), [
+      MONSTERS_BY_ID['wolf']!, MONSTERS_BY_ID['bandit']!,
+      MONSTERS_BY_ID['wolf']!, MONSTERS_BY_ID['bandit']!,
+    ]);
+    const names = s.order.filter((o) => o.side === 'foe').map((o) => o.name).sort();
+    expect(names).toEqual(['Bandit 1', 'Bandit 2', 'Wolf 1', 'Wolf 2']);
+  });
+
+  it('pluralises the opening line like English, not like a template', async () => {
+    const { openingBeat } = await import('./beat');
+    const { MONSTERS_BY_ID } = await import('@/data/srd/encounters');
+    const wolves = openingBeat([MONSTERS_BY_ID['wolf']!, MONSTERS_BY_ID['wolf']!], '');
+    expect(wolves.text).toContain('two Wolves');
+    expect(wolves.text).not.toContain('Wolfs');
+  });
+});

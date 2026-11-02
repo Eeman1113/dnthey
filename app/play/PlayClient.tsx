@@ -15,7 +15,7 @@ import { buildWorld, cleanProse } from '@/agents/dm';
 import { modelAvailable, prewarm, destroyAll } from '@/agents/session';
 import { NARRATOR, ADJUDICATOR } from '@/agents/prompts';
 import {
-  playBeat, maybeCompanionSpeaks, encounterFor, openingBeat, runCombatRound,
+  playBeat, maybeCompanionSpeaks, encounterFor, openingBeat, runCombatRound, runUpToPlayer,
 } from '@/campaign/beat';
 import { startCombat, type CombatState } from '@/campaign/combat';
 import { CombatPanel } from '@/ui/components/CombatPanel';
@@ -119,7 +119,13 @@ export function PlayClient() {
         const encounter = encounterFor(after, adjudication.threat);
         setFoes(encounter);
         pushBeat(openingBeat(encounter, adjudication.threat));
-        setCombat(startCombat(after, encounter));
+        // Anyone who beat the player on initiative acts before their turn.
+        const opened = await runUpToPlayer(after, startCombat(after, encounter), encounter, {
+          onBeat: pushBeat, onNarrationChunk: patchNarration, onStatus: setStatus,
+        });
+        setCombat(opened);
+        const pcNow = opened.order.find((o) => o.id === 'pc');
+        if (pcNow) setCampaign((p) => (p ? { ...p, pc: { ...p.pc, state: { ...p.pc.state, currentHp: pcNow.hp } } } : p));
       } else if (after) {
         await maybeCompanionSpeaks(after, action, {
           onBeat: pushBeat, onNarrationChunk: patchNarration, onStatus: setStatus,

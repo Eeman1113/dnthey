@@ -108,9 +108,9 @@ export async function adjudicate(scene: string, action: string): Promise<Adjudic
  */
 export function cleanProse(t: string): string {
   return t
-    .replace(/\*\*/g, '')
-    .replace(/(^|\s)\*(\S)/g, '$1$2')
-    .replace(/(\S)\*(\s|$)/g, '$1$2')
+    // Strip every asterisk. The model uses them for emphasis it was not asked
+    // for, and a lone one mid-sentence rendered as "act now*." on screen.
+    .replace(/\*/g, '')
     .replace(/^#+\s*/gm, '')
     .replace(/^\s*["'“]|["'”]\s*$/g, '')
     .replace(/\s+/g, ' ')
