@@ -1305,3 +1305,53 @@ input[type="text"]:focus, textarea:focus, select:focus {
   flex: none; font-size: var(--text-xs); font-weight: 650; letter-spacing: 0.04em;
   text-transform: uppercase; color: var(--rarity-edge, var(--content-2));
 }
+
+/* ---- combat ---------------------------------------------------------------
+   Enemy health is a bar, never a figure: a player at the table cannot read a
+   monster's remaining hit points either, and showing the number turns a fight
+   into arithmetic. */
+.combat { padding: 0.9rem; display: grid; gap: 0.7rem; }
+.combat__head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; }
+.combat__order { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.25rem; }
+
+.combat__row {
+  display: flex; align-items: center; gap: 0.55rem;
+  padding: 0.3rem 0.45rem; border-radius: 7px;
+  border: 1px solid transparent;
+  font-size: var(--text-sm);
+}
+.combat__row[data-active='true'] {
+  border-color: var(--rubric);
+  background: color-mix(in srgb, var(--rubric) 10%, transparent);
+}
+.combat__row[data-down='true'] { opacity: 0.45; }
+
+.combat__init { width: 1.6rem; text-align: right; color: var(--content-3); font-size: var(--text-xs); }
+.combat__art { width: 30px; height: 30px; object-fit: contain; flex: none; }
+.combat__art--foe {
+  width: 30px; height: 30px; border-radius: 6px; flex: none;
+  background: color-mix(in srgb, var(--rubric) 25%, var(--raised));
+  border: 1px solid var(--hairline-lit);
+}
+.combat__name { flex: 1; min-width: 0; color: var(--content-1); }
+.combat__hp { color: var(--content-2); font-size: var(--text-xs); }
+
+.combat__bar {
+  flex: none; width: 56px; height: 6px; border-radius: 3px;
+  background: var(--hairline); overflow: hidden;
+}
+.combat__bar > span { display: block; height: 100%; background: var(--rubric); transition: width 260ms ease; }
+
+.combat__actions { border-top: 1px solid var(--hairline); padding-top: 0.65rem; }
+.combat__targets { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+
+/* Combat log line: a sentence with real numbers in it, set quieter than
+   narration so the prose still leads, but not shouted like an eyebrow label. */
+.beat-combat {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 1.55;
+  color: var(--content-2);
+  padding-left: 0.7rem;
+  border-left: 2px solid var(--hairline-lit);
+}

@@ -75,6 +75,9 @@ function heuristic(action: string): AdjudicationResult {
     resolution: 'roll', ability, skill, dc: '15',
     successMeans: 'It works, more or less.',
     failureMeans: 'It goes wrong, and something notices.',
+    // Without a model, violence is only ever the player's explicit choice.
+    startsCombat: /\b(attack|strike|stab|swing|shoot|kill|fight|charge)\b/i.test(action),
+    threat: '',
     fallback: true,
   };
 }

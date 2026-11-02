@@ -14,7 +14,12 @@ import { matchBiome } from '@/ui/scenery';
 import { buildWorld, cleanProse } from '@/agents/dm';
 import { modelAvailable, prewarm, destroyAll } from '@/agents/session';
 import { NARRATOR, ADJUDICATOR } from '@/agents/prompts';
-import { playBeat, maybeCompanionSpeaks } from '@/campaign/beat';
+import {
+  playBeat, maybeCompanionSpeaks, encounterFor, openingBeat, runCombatRound,
+} from '@/campaign/beat';
+import { startCombat, type CombatState } from '@/campaign/combat';
+import { CombatPanel } from '@/ui/components/CombatPanel';
+import type { Monster } from '@/data/srd/encounters';
 import { pickCompanions } from '@/campaign/companions';
 import { loadCampaign, saveCampaign, clearCampaign, loadCharacters } from '@/campaign/persist';
 import type { Campaign, Beat } from '@/campaign/types';
@@ -27,6 +32,8 @@ export function PlayClient() {
   const [status, setStatus] = useState<string | null>(null);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
+  const [combat, setCombat] = useState<CombatState | null>(null);
+  const [foes, setFoes] = useState<Monster[]>([]);
   const [tone, setTone] = useState('grim, rain-soaked, low magic, a small personal stake');
   const logRef = useRef<HTMLDivElement>(null);
   const campaignRef = useRef<Campaign | null>(null);
@@ -100,15 +107,52 @@ export function PlayClient() {
     setInput('');
     setBusy(true);
     try {
-      await playBeat(c, action, {
+      const { adjudication } = await playBeat(c, action, {
         onBeat: pushBeat, onNarrationChunk: patchNarration, onStatus: setStatus,
       });
       setCampaign((p) => (p ? { ...p, rollCount: p.rollCount + 1 } : p));
       const after = campaignRef.current;
-      if (after) {
+
+      if (adjudication.startsCombat && after) {
+        // The DM decides a fight has begun; the engine picks real stat blocks
+        // inside the 2024 XP budget and rolls initiative.
+        const encounter = encounterFor(after, adjudication.threat);
+        setFoes(encounter);
+        pushBeat(openingBeat(encounter, adjudication.threat));
+        setCombat(startCombat(after, encounter));
+      } else if (after) {
         await maybeCompanionSpeaks(after, action, {
           onBeat: pushBeat, onNarrationChunk: patchNarration, onStatus: setStatus,
         });
+      }
+    } finally {
+      setBusy(false);
+      setStatus(null);
+    }
+  }
+
+  async function attack(targetId: string) {
+    const c = campaignRef.current;
+    if (!c || !combat || busy) return;
+    setBusy(true);
+    try {
+      const next = await runCombatRound(c, combat, foes, targetId, {
+        onBeat: pushBeat, onNarrationChunk: patchNarration, onStatus: setStatus,
+      });
+      setCombat(next);
+      // Keep the sheet honest: the player's hit points carry out of the fight.
+      const pc = next.order.find((o) => o.id === 'pc');
+      if (pc) setCampaign((p) => (p ? { ...p, pc: { ...p.pc, state: { ...p.pc.state, currentHp: pc.hp } } } : p));
+
+      if (next.over) {
+        pushBeat({
+          id: ulid(), kind: 'combat', at: Date.now(),
+          text: next.outcome === 'victory'
+            ? `The fight is over. ${next.xpAwarded} XP.`
+            : 'You are down. Someone drags you out of it.',
+        });
+        setCombat(null);
+        setFoes([]);
       }
     } finally {
       setBusy(false);
@@ -186,6 +230,7 @@ export function PlayClient() {
         </section>
 
         <aside className="play__rail">
+          {combat && <CombatPanel combat={combat} onAttack={attack} busy={busy} />}
           <div className="panel" style={{ padding: '0.9rem' }}>
             <div style={{ display: 'flex', gap: '0.7rem', alignItems: 'center' }}>
               {art && <Art className="rail-portrait" src={art.src} alt="" width={384} height={384} sizes="56px" />}
@@ -221,7 +266,10 @@ export function PlayClient() {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={busy ? 'The table is waiting' : 'What do you do?'}
+          placeholder={
+            combat ? 'In combat: choose a target, or describe something else'
+              : busy ? 'The table is waiting' : 'What do you do?'
+          }
           disabled={busy}
           aria-label="What do you do"
         />
@@ -246,6 +294,9 @@ function BeatView({ beat }: { beat: Beat }) {
   if (beat.kind === 'roll' && beat.roll) return <DiceRoll roll={beat.roll} />;
   if (beat.kind === 'action') return <p className="beat-action">{beat.text}</p>;
   if (beat.kind === 'system') return <p className="beat-system label">{beat.text}</p>;
+  // Combat lines are sentences carrying real numbers, so they are set as text
+  // rather than as an uppercase eyebrow.
+  if (beat.kind === 'combat') return <p className="beat-combat">{beat.text}</p>;
   if (beat.kind === 'speech') {
     return (
       <div className="beat-speech">

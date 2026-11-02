@@ -25,6 +25,11 @@ successMeans and failureMeans must each be ONE short sentence, under 20 words.
 failureMeans must be a complication that moves the story, never a dead end and never
 simply "nothing happens".
 
+startsCombat: true only when this action begins a fight, either because the player
+attacks someone or because it provokes something into attacking them. Most actions
+are false. If true, set threat to a few words naming what attacks, for example
+"three goblins from the rafters". Otherwise leave threat as an empty string.
+
 Output only the required JSON.`;
 
 export const NARRATOR = `You are the Dungeon Master narrating to one player.

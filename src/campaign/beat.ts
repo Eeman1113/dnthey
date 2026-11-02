@@ -15,6 +15,11 @@ import { derive } from '@/character/derive';
 import { SKILL_ABILITY, type Skill } from '@/engine/types';
 import { adjudicate, narrate, companionReact, cleanProse, type AdjudicationResult } from '@/agents/dm';
 import type { Campaign, Beat } from './types';
+import { buildEncounter, MONSTERS, type Monster } from '@/data/srd/encounters';
+import {
+  startCombat, resolveAttack, advance, checkEnd, living,
+  type CombatState, type Combatant,
+} from './combat';
 
 export interface BeatHandlers {
   onBeat: (b: Beat) => void;
@@ -50,6 +55,14 @@ export async function playBeat(
   let roll: D20Result | null = null;
   let success = true;
   let tier = 'success';
+
+  // Starting a fight is not an ability check: in the 2024 rules you roll
+  // initiative, which combat does for you. Rolling, say, an Intelligence check
+  // to draw a weapon is noise, and a failure on it means nothing.
+  if (adj.startsCombat) {
+    h.onStatus(null);
+    return { roll: null, adjudication: adj };
+  }
 
   if (adj.resolution === 'roll') {
     const mod = modifierFor(campaign, adj);
@@ -109,4 +122,88 @@ export async function maybeCompanionSpeaks(
       speaker: who.card.name, portraitId: who.card.portraitId,
     }));
   }
+}
+
+
+/* ------------------------------------------------------------------ combat */
+
+/**
+ * Pick an encounter that fits the budget, themed by whatever the DM said is
+ * attacking. The model names the threat in prose; the engine still chooses
+ * real stat blocks and still obeys the XP ceiling.
+ */
+export function encounterFor(campaign: Campaign, threat: string): Monster[] {
+  const rng = new Rng(`${campaign.seed}:enc:${campaign.beats.length}`);
+  const words = threat.toLowerCase();
+  const themed = MONSTERS.filter((m) => words.includes(m.id.replace('-', ' ')) || words.includes(m.name.toLowerCase()));
+  const level = campaign.pc.build.level;
+  const party = 1 + campaign.companions.length;
+  return buildEncounter(level, party, 'low', (n) => rng.int(0, n - 1), themed.map((m) => m.id));
+}
+
+export function openingBeat(foes: Monster[], threat: string): Beat {
+  // Tally duplicates so three goblins read as "three goblins", not a list.
+  const counts = new Map<string, number>();
+  for (const f of foes) counts.set(f.name, (counts.get(f.name) ?? 0) + 1);
+  const WORDS = ['', '', 'two', 'three', 'four', 'five', 'six'];
+  const names = [...counts].map(([n, c]) => (c === 1 ? n : `${WORDS[c] ?? c} ${n}s`)).join(', ');
+
+  // The model's threat line is flavour and the stat blocks are mechanics. If
+  // they disagree, print only the mechanics rather than contradicting
+  // ourselves in the same sentence.
+  const agrees = threat.trim() && [...counts.keys()]
+    .some((n) => threat.toLowerCase().includes(n.toLowerCase()));
+  return beat('combat', agrees ? `${threat}. Roll initiative.` : `${names}. Roll initiative.`);
+}
+
+/** One attack by the player, then every other combatant takes its turn. */
+export async function runCombatRound(
+  campaign: Campaign,
+  state: CombatState,
+  foes: Monster[],
+  targetId: string,
+  h: BeatHandlers,
+): Promise<CombatState> {
+  let s = { ...state, order: state.order.map((c) => ({ ...c })) };
+  const pc = s.order.find((c) => c.id === 'pc')!;
+  const target = s.order.find((c) => c.id === targetId);
+  if (!target) return s;
+
+  const report = resolveAttack(s, campaign.seed, pc, target);
+  h.onBeat(beat('combat', describeAttack(report)));
+  s = checkEnd(s, foes);
+  if (s.over) return s;
+
+  // Everyone else acts until it is the player's turn again.
+  let guard = 0;
+  s = advance(s);
+  while (!s.over && s.order[s.turn]!.id !== 'pc' && guard++ < 24) {
+    const actor = s.order[s.turn]!;
+    const enemySide: Combatant['side'] = actor.side === 'party' ? 'foe' : 'party';
+    const options = living(s, enemySide);
+    if (options.length) {
+      const rng = new Rng(`${campaign.seed}:${s.id}:${s.round}:${s.turn}:pick`);
+      const victim = rng.pick(options);
+      h.onBeat(beat('combat', describeAttack(resolveAttack(s, campaign.seed, actor, victim))));
+      s = checkEnd(s, foes);
+    }
+    if (s.over) break;
+    s = advance(s);
+  }
+  return s;
+}
+
+function describeAttack(r: {
+  attacker: string; target: string; weapon: string; hit: boolean; crit: boolean;
+  natural: number; total: number; ac: number; damage: number; targetDown: boolean; targetFled: boolean;
+}): string {
+  if (!r.hit) {
+    return `${r.attacker} swings ${r.weapon} at ${r.target} and misses. ` +
+      `${r.natural} on the die, ${r.total} against AC ${r.ac}.`;
+  }
+  const crit = r.crit ? 'Critical hit. ' : '';
+  const after = r.targetDown ? ` ${r.target} goes down.`
+    : r.targetFled ? ` ${r.target} breaks and runs.` : '';
+  return `${crit}${r.attacker} hits ${r.target} with ${r.weapon} for ${r.damage}. ` +
+    `${r.natural} on the die, ${r.total} against AC ${r.ac}.${after}`;
 }

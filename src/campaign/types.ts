@@ -3,7 +3,7 @@ import type { World } from '@/agents/schemas';
 import type { CompanionCard } from '@/agents/dm';
 import type { D20Result } from '@/engine/dtest';
 
-export type BeatKind = 'scene' | 'action' | 'roll' | 'narration' | 'speech' | 'system';
+export type BeatKind = 'scene' | 'action' | 'roll' | 'narration' | 'speech' | 'system' | 'combat';
 
 export interface Beat {
   id: string;

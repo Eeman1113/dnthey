@@ -11,6 +11,10 @@ export const AdjudicationZ = z.object({
   dc: z.enum(['5', '10', '15', '20', '25', '30']),
   successMeans: z.string(),
   failureMeans: z.string(),
+  /** True when this action starts, or walks into, a fight. */
+  startsCombat: z.boolean(),
+  /** Who or what is attacking, if combat begins. Used to theme the encounter. */
+  threat: z.string(),
 }).strict();
 export type Adjudication = z.infer<typeof AdjudicationZ>;
 export const ADJUDICATION_SCHEMA = json(AdjudicationZ);
