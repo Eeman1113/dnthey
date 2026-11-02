@@ -1,29 +1,34 @@
 /**
- * A representative portrait for each class, drawn from the generated library.
- * Chosen so the twelve cards read as twelve different people, varied species,
- * silhouette, age and mood rather than twelve armoured men.
+ * Class card artwork: bright, full-colour busts with transparent backgrounds.
+ *
+ * These are a deliberately different register from the campaign art. The scene
+ * plates and bestiary are dark inked manuscript illustration, which is right
+ * for atmosphere but turns to mud at thumbnail size. A class card is a UI
+ * control, so its art has to stay legible at 80px: front-lit, saturated, strong
+ * silhouette, and cut out so it sits on the card surface rather than carrying a
+ * competing rectangle of its own background.
  */
 export const CLASS_ART: Record<string, { id: string; alt: string }> = {
-  barbarian: { id: 'orc-barbarian-painted',   alt: 'An orc barbarian with war paint across the cheekbones and furs at the shoulder' },
-  bard:      { id: 'tiefling-bard-grinning',  alt: 'A grinning tiefling bard with long back-swept horns and a ruffed collar' },
-  cleric:    { id: 'human-cleric-serene',     alt: 'A serene shaven-headed human cleric wearing a heavy sunburst pendant' },
-  druid:     { id: 'elf-druid-antler',        alt: 'An elf druid wearing an antler circlet tangled in dark braided hair' },
-  fighter:   { id: 'dwarf-fighter-scarred',   alt: 'A scarred dwarf fighter in a dented iron helm with a braided black beard' },
-  monk:      { id: 'halfling-monk-calm',      alt: 'A calm young halfling monk with a topknot and a plain wrapped collar' },
-  paladin:   { id: 'human-paladin-stern',     alt: 'A stern human paladin with close-cropped grey hair and a polished gorget' },
-  ranger:    { id: 'elf-ranger-hooded',       alt: 'A weathered elf ranger with a leaf-dappled hood and a bow stave at the shoulder' },
-  rogue:     { id: 'halfling-rogue-scarred',  alt: 'A wiry halfling rogue with a scar through one eyebrow and a half-drawn hood' },
-  sorcerer:  { id: 'tiefling-sorcerer-violet',alt: 'A tiefling sorcerer with swept-back horns and dusky violet skin' },
-  warlock:   { id: 'tiefling-warlock-pale',   alt: 'A bone-pale tiefling warlock with backward-curling horns and one clouded eye' },
-  wizard:    { id: 'human-wizard-ancient',    alt: 'An ancient hooded human wizard with a long thin white beard' },
+  barbarian: { id: 'barbarian', alt: 'A green-skinned orc barbarian with tusks, red war paint and a fur mantle' },
+  bard:      { id: 'bard',      alt: 'A grinning lavender-skinned tiefling bard in an embroidered coat and feathered cap' },
+  cleric:    { id: 'cleric',    alt: 'A serene shaven-headed human cleric in pale robes with a gold sun pendant' },
+  druid:     { id: 'druid',     alt: 'An elf druid with an antler circlet and flowers in auburn braided hair' },
+  fighter:   { id: 'fighter',   alt: 'A dwarf fighter in a polished steel helm with a copper-red braided beard' },
+  monk:      { id: 'monk',      alt: 'A calm halfling monk with a topknot in a simple teal wrapped robe' },
+  paladin:   { id: 'paladin',   alt: 'A silver-haired human paladin in a steel gorget over a coral-red tabard' },
+  ranger:    { id: 'ranger',    alt: 'A wood elf ranger in a leaf-trimmed green hood with a bow over the shoulder' },
+  rogue:     { id: 'rogue',     alt: 'A freckled halfling rogue with auburn curls and a dark teal hood' },
+  sorcerer:  { id: 'sorcerer',  alt: 'A coral-skinned tiefling sorcerer with white hair and glowing periwinkle eyes' },
+  warlock:   { id: 'warlock',   alt: 'A bone-pale tiefling warlock with curling black horns and one clouded eye' },
+  wizard:    { id: 'wizard',    alt: 'An old human wizard with a long white beard in a deep blue pointed hood' },
 };
 
 export function classArtSrc(classId: string): { src: string; thumb: string; alt: string } | null {
   const a = CLASS_ART[classId];
   if (!a) return null;
   return {
-    src: `/assets/portraits/${a.id}.webp`,
-    thumb: `/assets/portraits/${a.id}@sm.webp`,
+    src: `/assets/classart/${a.id}.webp`,
+    thumb: `/assets/classart/${a.id}@sm.webp`,
     alt: a.alt,
   };
 }

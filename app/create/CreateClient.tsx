@@ -273,9 +273,9 @@ function ClassStep({ build, patch, onNext }: StepProps) {
                     className="card-portrait"
                     src={art.thumb}
                     alt=""
-                    width={128}
-                    height={128}
-                    sizes="74px"
+                    width={160}
+                    height={160}
+                    sizes="80px"
                     loading="lazy"
                   />
                 ) : null;
