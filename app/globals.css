@@ -265,12 +265,17 @@ strong { font-weight: 400; color: var(--content-1); }
   border-radius: 5px;
 }
 
-/* Selectable option card. */
+/* Selectable option card. BLOCK, not inline: a card stacks a title over its
+   supporting line. (An earlier pass made these inline-flex chips, which jammed
+   "Barbarian" and "d12 · STR" onto one line with no separation.) */
 .card-select {
+  display: block;
+  position: relative;
+  width: 100%;
   background: var(--panel);
   border: 1px solid var(--hairline);
-  border-radius: 9px;
-  padding: 0.7rem 0.85rem;
+  border-radius: 10px;
+  padding: 0.75rem 2.25rem 0.8rem 0.9rem;   /* right pad reserves the check */
   cursor: pointer;
   text-align: left;
   color: var(--content-1);
@@ -281,16 +286,50 @@ strong { font-weight: 400; color: var(--content-1); }
 .card-select:hover { border-color: var(--hairline-lit); background: var(--raised); }
 .card-select[data-selected="true"] {
   border-color: var(--rubric);
-  background: color-mix(in srgb, var(--rubric) 9%, var(--panel));
+  background: color-mix(in srgb, var(--rubric) 8%, var(--panel));
 }
-/* Selection is never carried by colour alone (accessibility.md › Inclusive color). */
+/* Selection is never carried by colour alone (accessibility.md › Inclusive color).
+   Absolutely placed so it never reflows the card's text. */
 .card-select[data-selected="true"]::after {
   content: '✓';
-  float: right;
+  position: absolute;
+  top: 0.7rem;
+  right: 0.8rem;
   color: var(--rubric);
   font-weight: 700;
-  margin-left: 0.5rem;
+  line-height: 1;
 }
+
+/* Card title / supporting line. */
+.card-title {
+  font-family: var(--font-display);
+  font-size: 1.1875rem;
+  line-height: 1.15;
+  color: var(--content-1);
+  display: block;
+}
+.card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0.5rem;
+  margin-top: 0.35rem;
+  font-size: 0.8125rem;
+  color: var(--content-2);
+}
+.card-body { margin-top: 0.4rem; font-size: 0.8125rem; line-height: 1.5; color: var(--content-2); }
+
+/* Small inline tag inside a card. */
+.tag {
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  border: 1px solid var(--hairline-lit);
+  color: var(--content-2);
+  white-space: nowrap;
+}
+.tag-accent { border-color: var(--rubric); color: var(--rubric); }
 
 .chip {
   font-family: var(--font-ui);
@@ -365,3 +404,82 @@ input[type="text"]:focus, textarea:focus, select:focus {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
 }
+
+/* ---------------------------------------------------------------- hints ---
+   Hover help for jargon. "d8 · WIS · caster" is meaningless to anyone who has
+   not played before, and the card cannot spell all of it out without becoming
+   a wall of text.
+
+   Implemented as CSS on a non-focusable span so it never nests an interactive
+   element inside a button. Keyboard and screen-reader users get the same
+   information from the button's aria-label, which spells every term out.      */
+
+[data-hint] { position: relative; }
+
+[data-hint]::after {
+  content: attr(data-hint);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(3px);
+  z-index: 60;
+  width: max-content;
+  max-width: 17rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 7px;
+  background: var(--raised);
+  border: 1px solid var(--hairline-lit);
+  box-shadow: var(--shadow);
+  color: var(--content-1);
+  font-family: var(--font-ui);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  line-height: 1.45;
+  white-space: normal;
+  text-align: left;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 110ms ease, transform 110ms ease;
+}
+[data-hint]::before {
+  content: '';
+  position: absolute;
+  bottom: calc(100% + 3px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 61;
+  border: 5px solid transparent;
+  border-top-color: var(--hairline-lit);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 110ms ease;
+}
+[data-hint]:hover::after,
+[data-hint]:hover::before,
+button:focus-visible [data-hint]::after,
+button:focus-visible [data-hint]::before {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+button:focus-visible [data-hint]::before { transform: translateX(-50%); }
+
+/* A tag that carries a hint shows a dotted underline so people know to hover. */
+.tag[data-hint] { border-bottom-style: dashed; cursor: help; }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-hint]::after { transition: none; transform: translateX(-50%); }
+}
+
+/* Class cards carry a one-line hook under the name, so the grid reads as
+   twelve choices rather than twelve pieces of notation. */
+.card-tagline {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--content-2);
+}
+.card-class { min-height: 9.5rem; display: flex; flex-direction: column; }
+.card-class .card-meta { margin-top: auto; padding-top: 0.6rem; }

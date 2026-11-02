@@ -25,6 +25,10 @@ export interface CharClass {
   weaponMasteryCount?: number;
   subclassName: string;
   subclassLevel: number;
+  /** One line on what it actually feels like to play. Shown on the class card. */
+  description: string;
+  /** The fantasy, in a few words — the hook under the name. */
+  tagline: string;
   startingEquipment: { option: 'A' | 'B'; items: string[]; gold: number }[];
   features: ClassFeature[];
 }
@@ -35,6 +39,8 @@ export const CLASSES: CharClass[] = [
     skillCount: 2, skillChoices: ['animal_handling', 'athletics', 'intimidation', 'nature', 'perception', 'survival'],
     armor: ['Light', 'Medium', 'Shields'], weapons: ['Simple', 'Martial'], caster: 'none',
     weaponMasteryCount: 2, subclassName: 'Path of the Berserker', subclassLevel: 3,
+    tagline: 'Rage into the thick of it and refuse to go down',
+    description: 'You run at the problem. Huge hit points, damage resistance while raging, and the best survivability in the game — at the cost of subtlety and spells.',
     startingEquipment: [
       { option: 'A', items: ['Greataxe', 'Handaxe (4)', 'Explorer’s Pack'], gold: 15 },
       { option: 'B', items: [], gold: 75 },
@@ -54,6 +60,8 @@ export const CLASSES: CharClass[] = [
     skillCount: 3, skillChoices: ['acrobatics', 'animal_handling', 'arcana', 'athletics', 'deception', 'history', 'insight', 'intimidation', 'investigation', 'medicine', 'nature', 'perception', 'performance', 'persuasion', 'religion', 'sleight_of_hand', 'stealth', 'survival'],
     armor: ['Light'], weapons: ['Simple'], caster: 'full', spellcastingAbility: 'cha',
     subclassName: 'College of Lore', subclassLevel: 3,
+    tagline: 'Talk your way in, then make everyone else better at their job',
+    description: "A full spellcaster who is also the party's face. Bardic Inspiration hands out bonus dice, and you end up passable at nearly every skill in the game.",
     startingEquipment: [
       { option: 'A', items: ['Leather Armor', 'Dagger', 'Musical Instrument', 'Entertainer’s Pack'], gold: 19 },
       { option: 'B', items: [], gold: 90 },
@@ -71,6 +79,8 @@ export const CLASSES: CharClass[] = [
     skillCount: 2, skillChoices: ['history', 'insight', 'medicine', 'persuasion', 'religion'],
     armor: ['Light', 'Medium', 'Shields'], weapons: ['Simple'], caster: 'full', spellcastingAbility: 'wis',
     subclassName: 'Life Domain', subclassLevel: 3,
+    tagline: "Divine power, heavy armour, and the party's lifeline",
+    description: 'You heal, you buff, you turn undead, and you can hold a front line. Prepared from the entire Cleric list each day, so you adapt to whatever is coming.',
     startingEquipment: [
       { option: 'A', items: ['Chain Shirt', 'Shield', 'Mace', 'Holy Symbol', 'Priest’s Pack'], gold: 7 },
       { option: 'B', items: [], gold: 110 },
@@ -87,6 +97,8 @@ export const CLASSES: CharClass[] = [
     skillCount: 2, skillChoices: ['arcana', 'animal_handling', 'insight', 'medicine', 'nature', 'perception', 'religion', 'survival'],
     armor: ['Light', 'Shields'], weapons: ['Simple'], caster: 'full', spellcastingAbility: 'wis',
     subclassName: 'Circle of the Land', subclassLevel: 3,
+    tagline: 'Nature magic, and the ability to become the animal',
+    description: 'A full caster who turns into beasts with Wild Shape. Strong control and utility spells, and a second body to spend when things get physical.',
     startingEquipment: [
       { option: 'A', items: ['Leather Armor', 'Shield', 'Sickle', 'Druidic Focus (Quarterstaff)', 'Explorer’s Pack', 'Herbalism Kit'], gold: 9 },
       { option: 'B', items: [], gold: 50 },
@@ -105,6 +117,8 @@ export const CLASSES: CharClass[] = [
     skillCount: 2, skillChoices: ['acrobatics', 'animal_handling', 'athletics', 'history', 'insight', 'intimidation', 'perception', 'persuasion', 'survival'],
     armor: ['Light', 'Medium', 'Heavy', 'Shields'], weapons: ['Simple', 'Martial'], caster: 'none',
     weaponMasteryCount: 3, subclassName: 'Champion', subclassLevel: 3,
+    tagline: 'The most attacks, the most armour, the most second chances',
+    description: 'The simplest class to pick up and the hardest to out-damage. Action Surge gives you an extra turn, Second Wind patches you up, and you get the widest weapon mastery.',
     startingEquipment: [
       { option: 'A', items: ['Chain Mail', 'Greatsword', 'Flail', 'Javelin (8)', 'Dungeoneer’s Pack'], gold: 4 },
       { option: 'B', items: [], gold: 155 },
@@ -124,6 +138,8 @@ export const CLASSES: CharClass[] = [
     skillCount: 2, skillChoices: ['acrobatics', 'athletics', 'history', 'insight', 'religion', 'stealth'],
     armor: [], weapons: ['Simple', 'Martial weapons with the Light property'], caster: 'none',
     subclassName: 'Warrior of the Open Hand', subclassLevel: 3,
+    tagline: 'Fists, speed, and a stunning strike nobody wants to fail',
+    description: 'No armour and no weapons needed. You move faster than anyone, strike multiple times a turn, and spend Focus Points to stun, dodge, or dart across the battlefield.',
     startingEquipment: [
       { option: 'A', items: ['Spear', 'Dagger (5)', 'Artisan’s Tools or Musical Instrument', 'Explorer’s Pack'], gold: 11 },
       { option: 'B', items: [], gold: 50 },
@@ -143,6 +159,8 @@ export const CLASSES: CharClass[] = [
     skillCount: 2, skillChoices: ['athletics', 'insight', 'intimidation', 'medicine', 'persuasion', 'religion'],
     armor: ['Light', 'Medium', 'Heavy', 'Shields'], weapons: ['Simple', 'Martial'], caster: 'half', spellcastingAbility: 'cha',
     weaponMasteryCount: 2, subclassName: 'Oath of Devotion', subclassLevel: 3,
+    tagline: 'Oath-bound, armoured, and able to burn spells into damage',
+    description: 'A half caster who hits like a fighter. Lay On Hands heals the party out of combat, and Divine Smite turns a spell slot into a sudden pile of radiant damage.',
     startingEquipment: [
       { option: 'A', items: ['Chain Mail', 'Shield', 'Longsword', 'Javelin (6)', 'Holy Symbol', 'Priest’s Pack'], gold: 9 },
       { option: 'B', items: [], gold: 150 },
@@ -162,6 +180,8 @@ export const CLASSES: CharClass[] = [
     skillCount: 3, skillChoices: ['animal_handling', 'athletics', 'insight', 'investigation', 'nature', 'perception', 'stealth', 'survival'],
     armor: ['Light', 'Medium', 'Shields'], weapons: ['Simple', 'Martial'], caster: 'half', spellcastingAbility: 'wis',
     weaponMasteryCount: 2, subclassName: 'Hunter', subclassLevel: 3,
+    tagline: "Tracker, skirmisher, and the party's answer to the wilderness",
+    description: "A half caster built around Hunter's Mark and mobility. Strong skills, strong ranged damage, and the one who keeps the party alive between towns.",
     startingEquipment: [
       { option: 'A', items: ['Studded Leather Armor', 'Scimitar', 'Shortsword', 'Longbow', 'Arrows (20)', 'Quiver', 'Druidic Focus', 'Explorer’s Pack'], gold: 7 },
       { option: 'B', items: [], gold: 150 },
@@ -180,6 +200,8 @@ export const CLASSES: CharClass[] = [
     skillCount: 4, skillChoices: ['acrobatics', 'athletics', 'deception', 'insight', 'intimidation', 'investigation', 'perception', 'performance', 'persuasion', 'sleight_of_hand', 'stealth'],
     armor: ['Light'], weapons: ['Simple', 'Martial weapons with the Finesse or Light property'], caster: 'none',
     weaponMasteryCount: 2, subclassName: 'Thief', subclassLevel: 3,
+    tagline: 'Hit once, hit hard, and never be where the danger is',
+    description: 'Sneak Attack puts all your damage in one precise strike. Expertise makes you the best in the party at a few chosen skills, and Cunning Action keeps you out of reach.',
     startingEquipment: [
       { option: 'A', items: ['Leather Armor', 'Dagger (2)', 'Shortsword', 'Shortbow', 'Arrows (20)', 'Quiver', 'Thieves’ Tools', 'Burglar’s Pack'], gold: 8 },
       { option: 'B', items: [], gold: 100 },
@@ -199,6 +221,8 @@ export const CLASSES: CharClass[] = [
     skillCount: 2, skillChoices: ['arcana', 'deception', 'insight', 'intimidation', 'persuasion', 'religion'],
     armor: [], weapons: ['Simple'], caster: 'full', spellcastingAbility: 'cha',
     subclassName: 'Draconic Sorcery', subclassLevel: 3,
+    tagline: 'Raw innate magic, bent into new shapes mid-cast',
+    description: 'A full caster with a smaller spell list but Metamagic — spend Sorcery Points to twin a spell, cast it without gestures, or push it further than it should go.',
     startingEquipment: [
       { option: 'A', items: ['Spear', 'Dagger (2)', 'Arcane Focus (crystal)', 'Dungeoneer’s Pack'], gold: 28 },
       { option: 'B', items: [], gold: 50 },
@@ -216,6 +240,8 @@ export const CLASSES: CharClass[] = [
     skillCount: 2, skillChoices: ['arcana', 'deception', 'history', 'intimidation', 'investigation', 'nature', 'religion'],
     armor: ['Light'], weapons: ['Simple'], caster: 'warlock', spellcastingAbility: 'cha',
     subclassName: 'Fiend Patron', subclassLevel: 3,
+    tagline: 'A pact with something older, paid in favours',
+    description: 'Few spell slots, but they come back on a short rest and always cast at the highest level. Eldritch Invocations let you build a very specific, very strange character.',
     startingEquipment: [
       { option: 'A', items: ['Leather Armor', 'Sickle', 'Dagger (2)', 'Arcane Focus (orb)', 'Book (occult lore)', 'Scholar’s Pack'], gold: 15 },
       { option: 'B', items: [], gold: 100 },
@@ -232,6 +258,8 @@ export const CLASSES: CharClass[] = [
     skillCount: 2, skillChoices: ['arcana', 'history', 'insight', 'investigation', 'medicine', 'nature', 'religion'],
     armor: [], weapons: ['Simple'], caster: 'full', spellcastingAbility: 'int',
     subclassName: 'Evoker', subclassLevel: 3,
+    tagline: 'The widest spell list in the game, written down and studied',
+    description: 'A full caster with a spellbook that grows every level. Fragile in a fight, but given ten minutes and the right spell prepared, there is almost nothing you cannot solve.',
     startingEquipment: [
       { option: 'A', items: ['Quarterstaff', 'Arcane Focus (wand)', 'Robe', 'Spellbook', 'Scholar’s Pack'], gold: 5 },
       { option: 'B', items: [], gold: 55 },

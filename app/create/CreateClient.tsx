@@ -16,6 +16,10 @@ import { rollAbilityScores } from '@/engine/dice';
 import { Rng } from '@/engine/rng';
 import type { CharacterBuild } from '@/character/types';
 import { Sheet } from '@/ui/components/Sheet';
+import {
+  HIT_DIE_HINT, ABILITY_HINT, PRIMARY_ABILITY_HINT, CASTER_HINT, MARTIAL_HINT,
+  SIZE_HINT, SPEED_HINT, BACKGROUND_ABILITY_HINT,
+} from '@/ui/hints';
 import { ThemeToggle } from '@/ui/components/ThemeToggle';
 
 /** 2024 creation order: Class -> Origin -> Ability Scores -> Details. */
@@ -115,44 +119,65 @@ function ClassStep({ build, patch, onNext }: StepProps) {
         n={1} title="Choose a class"
         blurb="In the 2024 rules you pick your class first — it is the biggest decision about how you will actually play."
       />
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid gap-2.5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(16.5rem, 1fr))' }}>
         {CLASSES.map((c) => (
           <button
             key={c.id}
-            className="chip"
+            className="card-select card-class"
             data-selected={build.classId === c.id}
+            aria-label={
+              `${c.name}. ${c.tagline}. Hit die d${c.hitDie}. ` +
+              `Primary ability ${c.primary.map((pr) => ABILITY_NAMES[pr]).join(' or ')}. ` +
+              `${c.caster !== 'none' ? 'Spellcaster.' : 'Not a spellcaster.'}`
+            }
             onClick={() => patch({
               classId: c.id, classSkills: [], expertise: [], weaponMasteries: [],
               equippedWeaponIds: [], equippedArmorId: undefined, hasShield: false,
             })}
           >
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.15rem', lineHeight: 1.2 }}>{c.name}</div>
-            <div className="meta">
-              d{c.hitDie} · {c.primary.map((p) => p.toUpperCase()).join('/')}
-              {c.caster !== 'none' && ' · caster'}
-            </div>
+            <span className="card-title">{c.name}</span>
+            <span className="card-tagline">{c.tagline}</span>
+            <span className="card-meta">
+              <span className="tag stat-num" data-hint={HIT_DIE_HINT(c.hitDie)}>d{c.hitDie}</span>
+              <span className="tag" data-hint={PRIMARY_ABILITY_HINT(c.primary)}>
+                {c.primary.map((pr) => pr.toUpperCase()).join(' / ')}
+              </span>
+              <span className="tag" data-hint={c.caster !== 'none' ? CASTER_HINT : MARTIAL_HINT}>
+                {c.caster !== 'none' ? 'spellcaster' : 'no spells'}
+              </span>
+            </span>
           </button>
         ))}
       </div>
 
       {cls && (
-        <div className="panel p-4 mt-4">
-          <h3 style={{ fontSize: '1.2rem' }}>{cls.name}</h3>
-          <p className="label mt-1" style={{ textTransform: 'none', letterSpacing: 0 }}>
-            Saves: {cls.savingThrows.map((s) => ABILITY_NAMES[s]).join(' & ')} ·
-            Armor: {cls.armor.join(', ') || 'none'} ·
-            Subclass at level {cls.subclassLevel}: {cls.subclassName}
-          </p>
-          <div className="rule-gold my-3" />
-          <ul style={{ fontSize: '0.8125rem', lineHeight: 1.65 }}>
+        <div className="panel mt-5" style={{ padding: '1.25rem' }}>
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div>
+              <h3 style={{ fontSize: '1.375rem' }}>{cls.name}</h3>
+              <p className="prose-ink" style={{ fontSize: '0.9375rem', marginTop: '0.35rem', maxWidth: '52ch', color: 'var(--content-1)' }}>
+                {cls.description}
+              </p>
+              <p className="meta" style={{ marginTop: '0.4rem' }}>
+                Saves in {cls.savingThrows.map((sv) => ABILITY_NAMES[sv]).join(' and ')}
+                {' · '}{cls.armor.length ? cls.armor.join(', ') + ' armor' : 'no armor training'}
+                {' · '}{cls.subclassName} at level {cls.subclassLevel}
+              </p>
+            </div>
+            <button className="btn btn-primary" onClick={onNext}>Continue to Origin</button>
+          </div>
+
+          <hr className="rule" style={{ margin: '1rem 0' }} />
+
+          <h4 className="label" style={{ marginBottom: '0.5rem' }}>What you get at level 1</h4>
+          <ul style={{ display: 'grid', gap: '0.6rem' }}>
             {cls.features.filter((f) => f.level === 1).map((f) => (
-              <li key={f.name} className="mb-2">
+              <li key={f.name} style={{ fontSize: '0.875rem', lineHeight: 1.6 }}>
                 <strong>{f.name}.</strong>{' '}
                 <span style={{ color: 'var(--content-2)' }}>{f.text}</span>
               </li>
             ))}
           </ul>
-          <button className="btn btn-primary mt-3" onClick={onNext}>Continue to Origin</button>
         </div>
       )}
     </>
@@ -181,7 +206,7 @@ function OriginStep({ build, patch, patchWith, onNext }: StepProps) {
       />
 
       <h3 className="label mb-2">Background</h3>
-      <div className="grid grid-cols-4 gap-2 mb-5">
+      <div className="grid gap-2.5 mb-5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(13rem, 1fr))' }}>
         {BACKGROUNDS.map((b) => (
           <button
             key={b.id} className="card-select" data-selected={build.backgroundId === b.id}
@@ -189,10 +214,12 @@ function OriginStep({ build, patch, patchWith, onNext }: StepProps) {
               backgroundId: b.id, backgroundIncrease: {}, originFeatId: b.originFeat, expertise: [],
             })}
           >
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', lineHeight: 1.2 }}>{b.name}</div>
-            <div className="meta">
-              {b.abilities.map((a) => a.toUpperCase()).join(' ')}
-            </div>
+            <span className="card-title">{b.name}</span>
+            <span className="card-meta" data-hint={BACKGROUND_ABILITY_HINT}>
+              {b.abilities.map((a) => (
+                <span key={a} className="tag" title={ABILITY_HINT[a]}>{a.toUpperCase()}</span>
+              ))}
+            </span>
           </button>
         ))}
       </div>
@@ -205,16 +232,19 @@ function OriginStep({ build, patch, patchWith, onNext }: StepProps) {
       )}
 
       <h3 className="label mb-2">Species</h3>
-      <div className="grid grid-cols-3 gap-2 mb-3">
+      <div className="grid gap-2.5 mb-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(12rem, 1fr))' }}>
         {SPECIES.map((s) => (
           <button
             key={s.id} className="card-select" data-selected={build.speciesId === s.id}
             onClick={() => patch({ speciesId: s.id, speciesChoice: undefined })}
           >
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', lineHeight: 1.2 }}>{s.name}</div>
-            <div className="meta">
-              {typeof s.size === 'string' ? s.size : 'small/medium'} · {s.speed} ft
-            </div>
+            <span className="card-title">{s.name}</span>
+            <span className="card-meta">
+              <span className="tag" data-hint={SIZE_HINT}>
+                {typeof s.size === 'string' ? s.size : 'small / medium'}
+              </span>
+              <span className="tag stat-num" data-hint={SPEED_HINT}>{s.speed} ft</span>
+            </span>
           </button>
         ))}
       </div>
@@ -222,14 +252,14 @@ function OriginStep({ build, patch, patchWith, onNext }: StepProps) {
       {species?.choice && (
         <div className="panel p-4 mb-4">
           <h3 className="label mb-2">{species.choice.label}</h3>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid gap-2.5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(17rem, 1fr))' }}>
             {species.choice.options.map((o) => (
               <button
                 key={o.id} className="card-select" data-selected={build.speciesChoice === o.id}
                 onClick={() => patch({ speciesChoice: o.id })}
               >
-                <div style={{ fontSize: '0.9rem', color: 'var(--content-1)' }}>{o.name}</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--content-3)', marginTop: 2 }}>{o.text}</div>
+                <span className="card-title" style={{ fontSize: '1rem' }}>{o.name}</span>
+                <span className="card-body">{o.text}</span>
               </button>
             ))}
           </div>

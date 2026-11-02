@@ -7,6 +7,7 @@ import { CLASSES_BY_ID } from '@/data/srd/classes';
 import { SPECIES_BY_ID } from '@/data/srd/species';
 import { BACKGROUNDS_BY_ID } from '@/data/srd/backgrounds';
 import { MASTERY_TEXT } from '@/data/srd/equipment';
+import { ABILITY_HINT, PROFICIENCY_HINT, SAVE_HINT, EXPERTISE_HINT } from '@/ui/hints';
 
 /**
  * Live character sheet. Reads only from derive(), so it can never disagree
@@ -54,9 +55,12 @@ export function Sheet({ build }: { build: CharacterBuild }) {
             key={a}
             className="panel-raised"
             style={{ padding: '0.5rem 0.25rem', textAlign: 'center' }}
-            title={ABILITY_NAMES[a]}
           >
-            <div className="label" style={{ fontSize: '0.75rem', letterSpacing: '0.07em' }}>
+            <div
+              className="label"
+              style={{ fontSize: '0.75rem', letterSpacing: '0.07em' }}
+              data-hint={ABILITY_HINT[a]}
+            >
               {a}
             </div>
             <div
@@ -73,6 +77,9 @@ export function Sheet({ build }: { build: CharacterBuild }) {
                 marginTop: '0.2rem',
                 color: d.saves[a].proficient ? 'var(--rubric)' : 'var(--content-3)',
               }}
+              data-hint={d.saves[a].proficient
+                ? `${SAVE_HINT} You are proficient in ${ABILITY_NAMES[a]} saves.`
+                : `${ABILITY_NAMES[a]} saving throw. You are not proficient, so no proficiency bonus is added.`}
             >
               {d.saves[a].proficient ? '◆' : '·'} {formatMod(d.saves[a].mod)}
             </div>
@@ -83,7 +90,10 @@ export function Sheet({ build }: { build: CharacterBuild }) {
       <div className="grid grid-cols-2 gap-5">
         <section>
           <h3 className="label" style={{ marginBottom: '0.5rem' }}>
-            Skills · prof {formatMod(d.proficiencyBonus)}
+            Skills ·{' '}
+            <span data-hint={PROFICIENCY_HINT} style={{ borderBottom: '1px dashed var(--hairline-lit)', cursor: 'help' }}>
+              prof {formatMod(d.proficiencyBonus)}
+            </span>
           </h3>
           <ul>
             {SKILLS.map((s) => {
@@ -101,6 +111,9 @@ export function Sheet({ build }: { build: CharacterBuild }) {
                   <span>
                     <span
                       aria-hidden
+                      data-hint={sk.expertise ? EXPERTISE_HINT : sk.proficient
+                        ? 'Proficient: your proficiency bonus is added to this skill.'
+                        : undefined}
                       style={{
                         display: 'inline-block', width: '0.9rem',
                         color: sk.expertise ? 'var(--rubric)' : 'var(--content-3)',
