@@ -6,7 +6,7 @@
  * Every call has a deterministic fallback, so a refusal, a timeout or a
  * missing model degrades the game instead of stopping it.
  */
-import { getSession, askJson, askProse, withAux, AUX_SYSTEM } from './session';
+import { getSession, askJson, askProse, withAux, timed, AUX_SYSTEM } from './session';
 import { ADJUDICATOR, NARRATOR, WORLDSMITH, LOREMASTER, TACTICIAN, companionCard, introCard, banterCard } from './prompts';
 import {
   TACTIC_SCHEMA, TacticZ,
@@ -35,13 +35,13 @@ const FALLBACK_WORLD: World = {
 
 export async function buildWorld(tone: string, lines?: string): Promise<{ world: World; generated: boolean }> {
   try {
-    const out = await withAux((s) => askJson(
+    const out = await timed('worldsmith', () => withAux((s) => askJson(
       s,
       `${WORLDSMITH}\n\nTone: ${tone}. Invent the opening. Make the threat immediate and personal.${linesClause(lines)}`,
       WORLD_SCHEMA,
       (v) => WorldZ.parse(v),
       { timeoutMs: 60_000 },
-    ));
+    )));
     if (out) return { world: out, generated: true };
   } catch { /* fall through */ }
   return { world: FALLBACK_WORLD, generated: false };
@@ -87,12 +87,12 @@ function heuristic(action: string): AdjudicationResult {
 export async function adjudicate(scene: string, action: string): Promise<AdjudicationResult> {
   try {
     const s = await getSession('adjudicator', ADJUDICATOR);
-    const out = await askJson(
+    const out = await timed('adjudicator', () => askJson(
       s,
       `SCENE: ${scene}\nPLAYER ACTION: ${action}`,
       ADJUDICATION_SCHEMA,
       (v) => AdjudicationZ.parse(v),
-    );
+    ));
     if (out) {
       // The model picks a skill and an ability independently, so reconcile them:
       // the SRD already defines which ability each skill uses.
@@ -178,13 +178,13 @@ export async function companionReact(
   card: CompanionCard, scene: string, action: string,
 ): Promise<CompanionReply | null> {
   try {
-    return await withAux((s) => askJson(
+    return await timed('companion', () => withAux((s) => askJson(
       s,
       `${companionCard(card)}\n\nSCENE: ${scene}\nTHE PLAYER JUST DID: ${action}\nSay one line.`,
       COMPANION_SCHEMA,
       (v) => CompanionReplyZ.parse(v),
       { timeoutMs: 30_000 },
-    ));
+    )));
   } catch {
     return null;
   }
@@ -197,13 +197,13 @@ export async function companionReact(
  */
 export async function companionIntro(card: CompanionCard, world: string): Promise<string | null> {
   try {
-    const out = await withAux((s) => askJson(
+    const out = await timed('intro', () => withAux((s) => askJson(
       s,
       `${introCard(card)}\n\nYou are all in: ${world}. Introduce yourself.`,
       COMPANION_SCHEMA,
       (v) => CompanionReplyZ.parse(v),
       { timeoutMs: 30_000 },
-    ));
+    )));
     return out?.speech ? cleanProse(out.speech) : null;
   } catch {
     return null;
@@ -219,13 +219,13 @@ export async function companionIntro(card: CompanionCard, world: string): Promis
  */
 export async function extractLore(scene: string, action: string, outcome: string): Promise<Lore | null> {
   try {
-    return await withAux((s) => askJson(
+    return await timed('loremaster', () => withAux((s) => askJson(
       s,
       `${LOREMASTER}\n\nSCENE: ${scene}\nTHE PLAYER: ${action}\nWHAT HAPPENED: ${outcome}`,
       LORE_SCHEMA,
       (v) => LoreZ.parse(v),
       { timeoutMs: 30_000 },
-    ));
+    )));
   } catch {
     return null;
   }
@@ -242,10 +242,10 @@ export async function companionBanter(
   a: CompanionCard, b: CompanionCard, scene: string,
 ): Promise<Banter | null> {
   try {
-    return await withAux((s) => askJson(
+    return await timed('banter', () => withAux((s) => askJson(
       s, `${banterCard(a, b)}\n\nYou are in: ${scene}. Say something to each other.`,
       BANTER_SCHEMA, (v) => BanterZ.parse(v), { timeoutMs: 30_000 },
-    ));
+    )));
   } catch {
     return null;
   }
@@ -269,11 +269,11 @@ export async function chooseTarget(
   if (targets.length <= 1) return null;
   try {
     const list = targets.map((t, i) => `${i}: ${t.name}, ${t.hpPct}% health`).join('\n');
-    const out = await withAux((s) => askJson(
+    const out = await timed('tactician', () => withAux((s) => askJson(
       s,
       `${TACTICIAN}\n\nMONSTER: ${monster.name}\nDOCTRINE: ${monster.doctrine}\nTARGETS:\n${list}`,
       TACTIC_SCHEMA, (v) => TacticZ.parse(v), { timeoutMs: 20_000 },
-    ));
+    )));
     if (!out) return null;
     if (!Number.isInteger(out.targetIndex) || out.targetIndex < 0 || out.targetIndex >= targets.length) {
       return null;

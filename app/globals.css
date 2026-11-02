@@ -1381,3 +1381,29 @@ input[type="text"]:focus, textarea:focus, select:focus {
   transition: background 200ms ease;
 }
 .bond__pip[data-on='true'] { background: var(--verdigris); }
+
+/* ---- developer telemetry -------------------------------------------------
+   Hidden until Ctrl+Shift+D. A fallback is designed to look exactly like a
+   working game, so without this there is no way to notice one firing. */
+.hud {
+  position: fixed; right: 1rem; bottom: 1rem; z-index: 80;
+  width: min(28rem, calc(100vw - 2rem));
+  max-height: 60vh; display: flex; flex-direction: column;
+  background: var(--panel); border: 1px solid var(--hairline-lit);
+  border-radius: 10px; box-shadow: var(--shadow); padding: 0.75rem;
+  font-family: var(--font-ui);
+}
+.hud__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem; }
+.hud__stats { display: flex; gap: 1.1rem; padding-bottom: 0.6rem; border-bottom: 1px solid var(--hairline); }
+.hud__stat { display: flex; flex-direction: column; gap: 0.1rem; }
+.hud__list { list-style: none; margin: 0.6rem 0 0; padding: 0; overflow-y: auto; display: grid; gap: 0.3rem; }
+.hud__row {
+  display: grid; grid-template-columns: 6.5rem 4rem 1fr; gap: 0.5rem;
+  font-size: var(--text-xs); align-items: baseline;
+  padding: 0.2rem 0.3rem; border-radius: 5px; border-left: 2px solid var(--success);
+}
+.hud__row[data-ok='false'] { border-left-color: var(--rubric); background: color-mix(in srgb, var(--rubric) 8%, transparent); }
+.hud__job { color: var(--content-1); font-weight: 600; }
+.hud__ms { color: var(--content-2); text-align: right; }
+.hud__preview { color: var(--content-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hud__hint { margin-top: 0.6rem; font-size: var(--text-xs); }

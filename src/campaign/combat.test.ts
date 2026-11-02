@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { buildEncounter, XP_BUDGET, MONSTERS, MONSTERS_BY_ID } from '@/data/srd/encounters';
-import { startCombat, resolveAttack, advance, checkEnd, living, rollDeathSave } from './combat';
-import { exampleBuild, initialState } from '@/character/builder';
+import { startCombat, resolveAttack, advance, checkEnd, living, rollDeathSave, resolveSpell, canCast } from './combat';
+import { exampleBuild, initialState, initialState as initialStateFor } from '@/character/builder';
 import { pickCompanions } from './companions';
 import type { Campaign } from './types';
 
@@ -282,5 +282,165 @@ describe('combat persists across a reload', () => {
     expect(round.combat!.round).toBe(s.round);
     expect(round.combat!.order.map((o) => o.id)).toEqual(s.order.map((o) => o.id));
     expect(round.foes).toHaveLength(1);
+  });
+});
+
+describe('companions are real characters', () => {
+  it('every companion in the pool builds a legal character', async () => {
+    const { COMPANION_POOL, companionBuild } = await import('./companions');
+    const { validateBuild } = await import('@/character/builder');
+    for (const card of COMPANION_POOL) {
+      const build = companionBuild(card, 3);
+      const errors = validateBuild(build).filter((i) => i.severity === 'error');
+      expect(errors.map((e) => e.message), card.id).toEqual([]);
+    }
+  });
+
+  it('their sheets differ by class, instead of one flat profile', async () => {
+    const { COMPANION_POOL, companionBuild } = await import('./companions');
+    const { derive } = await import('@/character/derive');
+    const sheets = COMPANION_POOL.map((c) => derive(companionBuild(c, 3)));
+    expect(new Set(sheets.map((s) => s.maxHp)).size).toBeGreaterThan(1);
+    expect(new Set(sheets.map((s) => s.armorClass)).size).toBeGreaterThan(1);
+  });
+
+  it('the barbarian is tougher than the wizard', async () => {
+    const { COMPANION_POOL, companionBuild } = await import('./companions');
+    const { derive } = await import('@/character/derive');
+    const brakka = derive(companionBuild(COMPANION_POOL.find((c) => c.id === 'brakka')!, 3));
+    const veladrin = derive(companionBuild(COMPANION_POOL.find((c) => c.id === 'veladrin')!, 3));
+    expect(brakka.maxHp).toBeGreaterThan(veladrin.maxHp);
+  });
+
+  it('the casters get spell slots and the barbarian does not', async () => {
+    const { COMPANION_POOL, companionBuild } = await import('./companions');
+    const { derive } = await import('@/character/derive');
+    const slots = (id: string) => derive(companionBuild(COMPANION_POOL.find((c) => c.id === id)!, 3)).spellSlots;
+    expect(slots('veladrin').length).toBeGreaterThan(0);
+    expect(slots('ysolde').length).toBeGreaterThan(0);
+    expect(slots('brakka')).toEqual([]);
+  });
+
+  it('an unknown companion still builds something legal', async () => {
+    const { companionBuild } = await import('./companions');
+    const { validateBuild } = await import('@/character/builder');
+    const build = companionBuild(
+      { id: 'nobody', name: 'Nobody', pronouns: 'they/them', species: 'human', klass: 'fighter',
+        voice: 'v', want: 'w', flaw: 'f', portraitId: 'fighter' }, 2);
+    expect(validateBuild(build).filter((i) => i.severity === 'error')).toEqual([]);
+  });
+});
+
+describe('spellcasting', () => {
+  const caster = () => {
+    const c = campaign();
+    const wiz = exampleBuild({
+      classId: 'wizard', backgroundId: 'sage', speciesId: 'human', level: 5,
+      baseScores: { str: 8, dex: 14, con: 13, int: 15, wis: 12, cha: 10 },
+      backgroundIncrease: { int: 2, con: 1 },
+      classSkills: ['arcana', 'investigation'], expertise: [],
+      originFeatId: 'magic_initiate_wizard', weaponMasteries: [],
+      equippedArmorId: undefined, equippedWeaponIds: ['quarterstaff'],
+    });
+    const camp = { ...c, pc: { build: wiz, state: initialStateFor(wiz) } };
+    const s = startCombat(camp, [MONSTERS_BY_ID['goblin']!]);
+    return { s, pc: s.order.find((o) => o.id === 'pc')!, foe: s.order.find((o) => o.side === 'foe')! };
+  };
+
+  it('a caster brings spells and slots, a barbarian does not', async () => {
+    const { pc } = caster();
+    expect(pc.spells!.length).toBeGreaterThan(0);
+    expect(pc.slots!.length).toBeGreaterThan(0);
+
+    const c = campaign();
+    const s = startCombat(c, [MONSTERS_BY_ID['goblin']!]);
+    const rogue = s.order.find((o) => o.id === 'pc')!;
+    expect(rogue.spells).toBeUndefined();
+  });
+
+  it('a cantrip costs no slot and a levelled spell does', async () => {
+    const { s, pc, foe } = caster();
+    const { SPELLS_BY_ID } = await import('@/data/srd/spells');
+    const before = [...pc.slotsUsed!];
+    resolveSpell(s, 'seed', pc, foe, SPELLS_BY_ID['fire-bolt']!);
+    expect(pc.slotsUsed).toEqual(before);
+    resolveSpell(s, 'seed', pc, foe, SPELLS_BY_ID['magic-missile']!);
+    expect(pc.slotsUsed![0]).toBe(before[0]! + 1);
+  });
+
+  it('refuses to cast without a slot', async () => {
+    const { pc } = caster();
+    const { SPELLS_BY_ID } = await import('@/data/srd/spells');
+    pc.slotsUsed = pc.slots!.map((n) => n);
+    expect(canCast(pc, SPELLS_BY_ID['magic-missile']!)).toBe(false);
+    expect(canCast(pc, SPELLS_BY_ID['fire-bolt']!)).toBe(true);
+  });
+
+  it('a save spell halves on a success only when it should', async () => {
+    const { s, pc, foe } = caster();
+    const { SPELLS_BY_ID } = await import('@/data/srd/spells');
+    // Sacred Flame does nothing on a success; Burning Hands halves.
+    let sawHalf = false, sawZero = false;
+    for (let i = 0; i < 60; i++) {
+      s.turn = i;
+      foe.hp = foe.maxHp;
+      const r = resolveSpell(s, `seed${i}`, pc, foe, SPELLS_BY_ID['burning-hands']!);
+      if (r.saved && r.damage > 0) sawHalf = true;
+      foe.hp = foe.maxHp;
+      const r2 = resolveSpell(s, `seed${i}`, pc, foe, { ...SPELLS_BY_ID['sacred-flame']!, level: 0 });
+      if (r2.saved && r2.damage === 0) sawZero = true;
+    }
+    expect(sawHalf).toBe(true);
+    expect(sawZero).toBe(true);
+  });
+
+  it('healing brings a dying ally back up and clears their saves', async () => {
+    const { s, pc } = caster();
+    const { SPELLS_BY_ID } = await import('@/data/srd/spells');
+    const ally = s.order.find((o) => o.side === 'party' && o.id !== 'pc')!;
+    ally.hp = 0; ally.dying = true; ally.deathSaves = { successes: 0, failures: 2 };
+    resolveSpell(s, 'seed', pc, ally, SPELLS_BY_ID['cure-wounds']!);
+    expect(ally.hp).toBeGreaterThan(0);
+    expect(ally.dying).toBe(false);
+    expect(ally.deathSaves).toEqual({ successes: 0, failures: 0 });
+  });
+
+  it('never heals past the maximum', async () => {
+    const { s, pc } = caster();
+    const { SPELLS_BY_ID } = await import('@/data/srd/spells');
+    const ally = s.order.find((o) => o.side === 'party' && o.id !== 'pc')!;
+    ally.hp = ally.maxHp - 1;
+    resolveSpell(s, 'seed', pc, ally, SPELLS_BY_ID['cure-wounds']!);
+    expect(ally.hp).toBe(ally.maxHp);
+  });
+
+  it('cantrips scale with character level, levelled spells do not', async () => {
+    const { cantripDice, spellsFor } = await import('@/data/srd/spells');
+    expect(cantripDice('1d10', 1)).toBe('1d10');
+    expect(cantripDice('1d10', 5)).toBe('2d10');
+    expect(cantripDice('1d10', 11)).toBe('3d10');
+    expect(cantripDice('1d10', 17)).toBe('4d10');
+    const l5 = spellsFor('wizard', 5, 3);
+    expect(l5.find((x) => x.id === 'fire-bolt')!.effect).toMatchObject({ damage: '2d10' });
+    expect(l5.find((x) => x.id === 'fireball')!.effect).toMatchObject({ damage: '8d6' });
+  });
+
+  it('only offers spells the class and slot level allow', async () => {
+    const { spellsFor } = await import('@/data/srd/spells');
+    const low = spellsFor('wizard', 1, 1);
+    expect(low.some((s) => s.id === 'fireball')).toBe(false);
+    expect(low.some((s) => s.id === 'magic-missile')).toBe(true);
+    expect(spellsFor('wizard', 5, 3).some((s) => s.id === 'sacred-flame')).toBe(false);
+  });
+
+  it('a spell can kill, and never drives hit points below zero', async () => {
+    const { s, pc, foe } = caster();
+    const { SPELLS_BY_ID } = await import('@/data/srd/spells');
+    for (let i = 0; i < 20 && !foe.dead; i++) {
+      s.turn = i;
+      resolveSpell(s, `k${i}`, pc, foe, SPELLS_BY_ID['fire-bolt']!);
+    }
+    expect(foe.hp).toBe(0);
+    expect(foe.dead).toBe(true);
   });
 });

@@ -10,6 +10,7 @@ import { formatMod } from '@/engine/types';
 import { Art } from '@/ui/components/Art';
 import { DiceRoll } from '@/ui/components/DiceRoll';
 import { ThemeToggle } from '@/ui/components/ThemeToggle';
+import { DevHud } from '@/ui/components/DevHud';
 import { classArtSrc } from '@/ui/classArt';
 import { matchBiome } from '@/ui/scenery';
 import { buildWorld, cleanProse, companionIntro } from '@/agents/dm';
@@ -217,14 +218,14 @@ export function PlayClient() {
     }
   }
 
-  async function attack(targetId: string) {
+  async function attack(targetId: string, spellId?: string) {
     const c = campaignRef.current;
     if (!c || !combat || busy) return;
     setBusy(true);
     try {
       const next = await runCombatRound(c, combat, foes, targetId, {
         onBeat: pushBeat, onNarrationChunk: patchNarration, onStatus: setStatus,
-      });
+      }, spellId);
       setCombat(next);
       // Keep the sheet honest: the player's hit points carry out of the fight.
       const pc = next.order.find((o) => o.id === 'pc');
@@ -473,6 +474,7 @@ export function PlayClient() {
           {busy ? 'Resolving' : 'Do it'}
         </button>
       </form>
+      <DevHud />
     </main>
   );
 }

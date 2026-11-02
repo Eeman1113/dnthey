@@ -1,4 +1,8 @@
 import type { CompanionCard } from '@/agents/dm';
+import type { CharacterBuild } from '@/character/types';
+import { emptyBuild } from '@/character/builder';
+import type { Ability, Skill } from '@/engine/types';
+import type { Mastery } from '@/data/srd/equipment';
 
 /**
  * A small cast with real friction. Two is deliberate: each companion costs a
@@ -46,4 +50,87 @@ export function pickCompanions(seed: string, count = 2): CompanionCard[] {
     out.push(pool.splice(Math.abs(h) % pool.length, 1)[0]!);
   }
   return out;
+}
+
+
+/**
+ * A real character sheet for each companion.
+ *
+ * They used to fight on a flat profile, AC 14 and 12 hit points regardless of
+ * who they were, which meant the wizard was as hard to kill as the barbarian
+ * and nobody had a spell. These go through the same builder and the same
+ * derive() as the player, so their armour class, hit points, attacks and
+ * spell slots come from the rules rather than from a guess.
+ */
+interface Loadout {
+  classId: string; speciesId: string; backgroundId: string;
+  scores: Record<Ability, number>;
+  increase: Partial<Record<Ability, number>>;
+  skills: Skill[];
+  feat: string;
+  masteries: Mastery[];
+  armor?: string;
+  shield?: boolean;
+  weapons: string[];
+}
+
+const LOADOUTS: Record<string, Loadout> = {
+  brakka: {
+    classId: 'barbarian', speciesId: 'orc', backgroundId: 'soldier',
+    scores: { str: 15, dex: 13, con: 14, int: 8, wis: 12, cha: 10 },
+    increase: { str: 2, con: 1 },
+    skills: ['athletics', 'intimidation'], feat: 'savage_attacker',
+    masteries: ['cleave', 'topple'], weapons: ['greataxe', 'handaxe'],
+  },
+  veladrin: {
+    classId: 'wizard', speciesId: 'human', backgroundId: 'sage',
+    scores: { str: 8, dex: 14, con: 13, int: 15, wis: 12, cha: 10 },
+    increase: { int: 2, con: 1 },
+    skills: ['arcana', 'investigation'], feat: 'magic_initiate_wizard',
+    masteries: [], weapons: ['quarterstaff', 'dagger'],
+  },
+  pell: {
+    classId: 'rogue', speciesId: 'halfling', backgroundId: 'criminal',
+    scores: { str: 8, dex: 15, con: 13, int: 14, wis: 12, cha: 10 },
+    increase: { dex: 2, con: 1 },
+    skills: ['acrobatics', 'deception', 'perception', 'sleight_of_hand'],
+    feat: 'alert', masteries: ['vex', 'nick'],
+    armor: 'leather', weapons: ['shortsword', 'dagger', 'shortbow'],
+  },
+  ysolde: {
+    classId: 'cleric', speciesId: 'human', backgroundId: 'acolyte',
+    scores: { str: 13, dex: 10, con: 14, int: 12, wis: 15, cha: 8 },
+    increase: { wis: 2, int: 1 },
+    skills: ['insight', 'religion'], feat: 'magic_initiate_cleric',
+    masteries: [], armor: 'chain_shirt', shield: true, weapons: ['mace'],
+  },
+};
+
+export function companionBuild(card: CompanionCard, level: number): CharacterBuild {
+  const l = LOADOUTS[card.id];
+  if (!l) {
+    // Unknown companion: a plain, legal level appropriate fighter rather than
+    // a crash or an invented profile.
+    return {
+      ...emptyBuild(), id: card.id, name: card.name, pronouns: card.pronouns,
+      classId: 'fighter', speciesId: 'human', backgroundId: 'soldier', level,
+      baseScores: { str: 15, dex: 13, con: 14, int: 10, wis: 12, cha: 8 },
+      backgroundIncrease: { str: 2, con: 1 },
+      classSkills: ['athletics', 'perception'], originFeatId: 'savage_attacker',
+      weaponMasteries: ['topple'], equippedArmorId: 'chain_shirt',
+      equippedWeaponIds: ['longsword'], scoreMethod: 'standard_array',
+    };
+  }
+  return {
+    ...emptyBuild(),
+    id: card.id, name: card.name, pronouns: card.pronouns, level,
+    classId: l.classId, speciesId: l.speciesId, backgroundId: l.backgroundId,
+    speciesChoice: l.speciesId === 'elf' ? 'wood' : undefined,
+    scoreMethod: 'standard_array',
+    baseScores: l.scores, backgroundIncrease: l.increase,
+    classSkills: l.skills, originFeatId: l.feat,
+    weaponMasteries: l.masteries,
+    equippedArmorId: l.armor, hasShield: !!l.shield,
+    equippedWeaponIds: l.weapons,
+  };
 }

@@ -1,7 +1,9 @@
 'use client';
 
 import { Art } from '@/ui/components/Art';
-import type { CombatState, Combatant } from '@/campaign/combat';
+import { useState } from 'react';
+import { canCast, type CombatState, type Combatant } from '@/campaign/combat';
+import type { Spell } from '@/data/srd/spells';
 
 /**
  * Initiative tracker and target picker.
@@ -15,12 +17,27 @@ export function CombatPanel({
   combat, onAttack, busy,
 }: {
   combat: CombatState;
-  onAttack: (targetId: string) => void;
+  onAttack: (targetId: string, spellId?: string) => void;
   busy: boolean;
 }) {
+  const [spell, setSpell] = useState<Spell | null>(null);
   const active = combat.order[combat.turn];
   const yourTurn = active?.id === 'pc' && !combat.over;
   const foes = combat.order.filter((c) => c.side === 'foe');
+  const pc = combat.order.find((c) => c.id === 'pc');
+
+  // A healing spell targets the party, everything else targets the enemy.
+  const healing = spell?.effect.kind === 'heal';
+  const targets = (healing
+    ? combat.order.filter((c) => c.side === 'party' && !c.dead)
+    : foes.filter((f) => f.hp > 0 && !f.fled && !f.dead));
+
+  const slotLabel = (lv: number) => {
+    if (lv === 0) return 'cantrip';
+    const have = pc?.slots?.[lv - 1] ?? 0;
+    const used = pc?.slotsUsed?.[lv - 1] ?? 0;
+    return `${have - used} of ${have} left`;
+  };
 
   return (
     <div className="combat panel" role="region" aria-label="Combat">
@@ -43,11 +60,52 @@ export function CombatPanel({
 
       {yourTurn && (
         <div className="combat__actions">
-          <span className="label" style={{ display: 'block', marginBottom: '0.4rem' }}>Attack</span>
+          {pc?.spells?.length ? (
+            <>
+              <span className="label" style={{ display: 'block', marginBottom: '0.4rem' }}>
+                {spell ? `Casting ${spell.name}` : 'Action'}
+              </span>
+              <div className="combat__targets" style={{ marginBottom: '0.6rem' }}>
+                <button
+                  className="chip" data-selected={spell === null}
+                  onClick={() => setSpell(null)} disabled={busy}
+                >
+                  Weapon
+                </button>
+                {pc.spells.map((sp) => {
+                  const ok = canCast(pc, sp);
+                  return (
+                    <button
+                      key={sp.id} className="chip" data-selected={spell?.id === sp.id}
+                      disabled={busy || !ok}
+                      onClick={() => setSpell(sp)}
+                      data-hint={`${sp.text} ${slotLabel(sp.level)}.`}
+                      style={ok ? undefined : { opacity: 0.4 }}
+                    >
+                      {sp.name}
+                      <span className="meta-quiet" style={{ marginLeft: '0.35rem' }}>
+                        {sp.level === 0 ? 'cantrip' : `lv ${sp.level}`}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          ) : (
+            <span className="label" style={{ display: 'block', marginBottom: '0.4rem' }}>Attack</span>
+          )}
+
+          <span className="label" style={{ display: 'block', marginBottom: '0.4rem' }}>
+            {healing ? 'Heal who' : 'Target'}
+          </span>
           <div className="combat__targets">
-            {foes.filter((f) => f.hp > 0 && !f.fled).map((f) => (
-              <button key={f.id} className="btn" disabled={busy} onClick={() => onAttack(f.id)}>
-                {f.name}
+            {targets.map((t) => (
+              <button
+                key={t.id} className="btn" disabled={busy}
+                onClick={() => { onAttack(t.id, spell?.id); setSpell(null); }}
+              >
+                {t.name}
+                {healing && <span className="meta-quiet" style={{ marginLeft: '0.3rem' }}>{t.hp}/{t.maxHp}</span>}
               </button>
             ))}
           </div>

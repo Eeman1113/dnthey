@@ -37,6 +37,54 @@ export const AUX_SYSTEM =
 
 const pool = new Map<string, Promise<ModelSession>>();
 
+/* ------------------------------------------------------------------ telemetry */
+
+export interface CallRecord {
+  id: number;
+  job: string;
+  ms: number;
+  ok: boolean;
+  /** Set when the first attempt failed validation and a repair was needed. */
+  repaired?: boolean;
+  error?: string;
+  contextUsed?: number;
+  contextWindow?: number;
+  preview: string;
+}
+
+const MAX_RECORDS = 40;
+let records: CallRecord[] = [];
+let nextId = 1;
+const listeners = new Set<(r: CallRecord[]) => void>();
+
+export function recordCall(r: Omit<CallRecord, 'id'>): void {
+  records = [...records.slice(-(MAX_RECORDS - 1)), { ...r, id: nextId++ }];
+  for (const l of listeners) l(records);
+}
+
+export function getCalls(): CallRecord[] { return records; }
+
+export function onCalls(fn: (r: CallRecord[]) => void): () => void {
+  listeners.add(fn);
+  return () => { listeners.delete(fn); };
+}
+
+/** Wrap any model job so the HUD sees its latency and outcome. */
+export async function timed<T>(job: string, fn: () => Promise<T>): Promise<T> {
+  const t0 = performance.now();
+  try {
+    const out = await fn();
+    recordCall({
+      job, ms: Math.round(performance.now() - t0), ok: out !== null,
+      preview: typeof out === 'string' ? out.slice(0, 80) : JSON.stringify(out ?? '').slice(0, 80),
+    });
+    return out;
+  } catch (e) {
+    recordCall({ job, ms: Math.round(performance.now() - t0), ok: false, error: String(e), preview: '' });
+    throw e;
+  }
+}
+
 export function modelAvailable(): boolean {
   return isSupported();
 }
@@ -85,9 +133,24 @@ export async function askJson<T>(
         omitResponseConstraintInput: true,
         timeoutMs: opts.timeoutMs ?? 45_000,
       });
-      return validate(JSON.parse(raw));
-    } catch {
-      if (attempt === 1) return null;
+      const out = validate(JSON.parse(raw));
+      if (attempt === 1) {
+        recordCall({
+          job: 'repair', ms: 0, ok: true, repaired: true,
+          contextUsed: session.contextUsage, contextWindow: session.contextWindow,
+          preview: 'second attempt succeeded',
+        });
+      }
+      return out;
+    } catch (e) {
+      if (attempt === 1) {
+        recordCall({
+          job: 'validation', ms: 0, ok: false, error: String(e),
+          contextUsed: session.contextUsage, contextWindow: session.contextWindow,
+          preview: 'both attempts failed, using fallback',
+        });
+        return null;
+      }
     }
   }
   return null;

@@ -21,9 +21,10 @@ import { retrieve, renderCodex, renderChronicle, upsert, prune } from '@/memory/
 import type { Campaign, Beat } from './types';
 import { buildEncounter, MONSTERS, type Monster } from '@/data/srd/encounters';
 import {
-  startCombat, resolveAttack, advance, checkEnd, living, rollDeathSave,
-  type CombatState, type Combatant,
+  startCombat, resolveAttack, resolveSpell, advance, checkEnd, living, rollDeathSave,
+  type CombatState, type Combatant, type SpellReport,
 } from './combat';
+import { SPELLS_BY_ID } from '@/data/srd/spells';
 
 export interface BeatHandlers {
   onBeat: (b: Beat) => void;
@@ -282,14 +283,20 @@ export async function runCombatRound(
   foes: Monster[],
   targetId: string,
   h: BeatHandlers,
+  spellId?: string,
 ): Promise<CombatState> {
   let s = { ...state, order: state.order.map((c) => ({ ...c })) };
   const pc = s.order.find((c) => c.id === 'pc')!;
   const target = s.order.find((c) => c.id === targetId);
   if (!target) return s;
 
-  const report = resolveAttack(s, campaign.seed, pc, target);
-  h.onBeat(beat('combat', describeAttack(report)));
+  if (spellId) {
+    const spell = SPELLS_BY_ID[spellId];
+    if (!spell) return s;
+    h.onBeat(beat('combat', describeSpell(resolveSpell(s, campaign.seed, pc, target, spell))));
+  } else {
+    h.onBeat(beat('combat', describeAttack(resolveAttack(s, campaign.seed, pc, target))));
+  }
   s = checkEnd(s, foes);
   if (s.over) return s;
 
@@ -340,6 +347,30 @@ async function pickVictim(
     h.onBeat(beat('speech', choice.taunt.trim(), { speaker: actor.name }));
   }
   return options[choice.index] ?? rng.pick(options);
+}
+
+function describeSpell(r: SpellReport): string {
+  const at = `${r.caster} casts ${r.spell}`;
+  if (r.kind === 'heal') {
+    return r.healed > 0
+      ? `${at} on ${r.target}, restoring ${r.healed} hit points.`
+      : `${at} on ${r.target}, who is already at full health.`;
+  }
+  if (r.kind === 'tempHp') return `${at}, gaining ${r.healed} temporary hit points.`;
+
+  const after = r.targetDead ? ` ${r.target} is killed.`
+    : r.targetDown ? ` ${r.target} goes down and starts dying.` : '';
+
+  if (r.kind === 'attack') {
+    if (!r.hit) return `${at} at ${r.target} and misses. ${r.natural} on the die, ${r.total} against AC ${r.ac}.`;
+    return `${r.crit ? 'Critical hit. ' : ''}${at} and hits ${r.target} for ${r.damage}. ` +
+      `${r.natural} on the die, ${r.total} against AC ${r.ac}.${after}`;
+  }
+
+  const verdict = r.saved
+    ? (r.damage > 0 ? `${r.target} saves and takes half, ${r.damage}.` : `${r.target} saves and takes nothing.`)
+    : `${r.target} fails and takes ${r.damage}.`;
+  return `${at}. ${r.saveAbility?.toUpperCase()} save ${r.saveRoll} against DC ${r.saveDc}. ${verdict}${after}`;
 }
 
 function describeDeathSave(
