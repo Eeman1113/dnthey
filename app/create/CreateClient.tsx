@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ABILITIES, ABILITY_NAMES, SKILL_NAMES, formatMod, type Ability, type Skill } from '@/engine/types';
 import { CLASSES } from '@/data/srd/classes';
 import { SPECIES } from '@/data/srd/species';
@@ -16,6 +17,7 @@ import { rollAbilityScores } from '@/engine/dice';
 import { Rng } from '@/engine/rng';
 import type { CharacterBuild } from '@/character/types';
 import { Sheet } from '@/ui/components/Sheet';
+import { classArtSrc } from '@/ui/classArt';
 import { derive } from '@/character/derive';
 import {
   HIT_DIE_HINT, ABILITY_HINT, PRIMARY_ABILITY_HINT, CASTER_HINT, MARTIAL_HINT,
@@ -263,8 +265,26 @@ function ClassStep({ build, patch, onNext }: StepProps) {
               equippedWeaponIds: [], equippedArmorId: undefined, hasShield: false,
             })}
           >
-            <span className="card-title">{c.name}</span>
-            <span className="card-tagline">{c.tagline}</span>
+            <span className="card-head">
+              {(() => {
+                const art = classArtSrc(c.id);
+                return art ? (
+                  <Image
+                    className="card-portrait"
+                    src={art.thumb}
+                    alt=""
+                    width={128}
+                    height={128}
+                    sizes="74px"
+                    loading="lazy"
+                  />
+                ) : null;
+              })()}
+              <span className="card-head-text">
+                <span className="card-title">{c.name}</span>
+                <span className="card-tagline">{c.tagline}</span>
+              </span>
+            </span>
             <span className="card-meta">
               <span className="tag stat-num" data-hint={HIT_DIE_HINT(c.hitDie)}>d{c.hitDie}</span>
               <span className="tag" data-hint={PRIMARY_ABILITY_HINT(c.primary)}>
@@ -283,7 +303,7 @@ function ClassStep({ build, patch, onNext }: StepProps) {
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
               <h3 style={{ fontSize: '1.375rem' }}>{cls.name}</h3>
-              <p className="prose-ink" style={{ fontSize: '0.9375rem', marginTop: '0.35rem', maxWidth: '52ch', color: 'var(--content-1)' }}>
+              <p className="prose-ink" style={{ fontSize: 'var(--text-base)', marginTop: '0.35rem', maxWidth: '52ch', color: 'var(--content-1)' }}>
                 {cls.description}
               </p>
               <p className="meta" style={{ marginTop: '0.4rem' }}>
@@ -300,7 +320,7 @@ function ClassStep({ build, patch, onNext }: StepProps) {
           <h4 className="label" style={{ marginBottom: '0.5rem' }}>What you get at level 1</h4>
           <ul style={{ display: 'grid', gap: '0.6rem' }}>
             {cls.features.filter((f) => f.level === 1).map((f) => (
-              <li key={f.name} style={{ fontSize: '0.875rem', lineHeight: 1.6 }}>
+              <li key={f.name} style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>
                 <strong>{f.name}.</strong>{' '}
                 <span style={{ color: 'var(--content-2)' }}>{f.text}</span>
               </li>
@@ -352,7 +372,7 @@ function OriginStep({ build, patch, patchWith, onNext }: StepProps) {
         ))}
       </div>
       {bg && (
-        <p className="prose-ink mb-5" style={{ fontSize: '0.875rem', color: 'var(--content-2)' }}>
+        <p className="prose-ink mb-5" style={{ fontSize: 'var(--text-sm)', color: 'var(--content-2)' }}>
           {bg.description} Grants {SKILL_NAMES[bg.skills[0]]} and {SKILL_NAMES[bg.skills[1]]},
           proficiency with {bg.toolProficiency}, and the{' '}
           <strong>{FEATS_BY_ID[bg.originFeat]?.name}</strong> feat.
@@ -397,7 +417,7 @@ function OriginStep({ build, patch, patchWith, onNext }: StepProps) {
       {species && (
         <div className="panel p-4 mb-5">
           <h3 className="label mb-2">{species.name} traits</h3>
-          <ul style={{ fontSize: '0.8125rem', lineHeight: 1.6 }}>
+          <ul style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>
             {species.traits.map((t) => (
               <li key={t.name} className="mb-1.5">
                 <strong>{t.name}.</strong>{' '}
@@ -617,12 +637,12 @@ function DetailsStep({ build, patch, patchWith }: StepProps) {
 
       <div className="field-pair mb-5">
         <div>
-          <label className="label">Name</label>
+          <label className="field-label">Name</label>
           <input type="text" value={build.name} placeholder="Veyra Ashlock"
             onChange={(e) => patch({ name: e.target.value })} />
         </div>
         <div>
-          <label className="label">Pronouns</label>
+          <label className="field-label">Pronouns</label>
           <input type="text" value={build.pronouns}
             onChange={(e) => patch({ pronouns: e.target.value })} />
         </div>
@@ -678,12 +698,12 @@ function DetailsStep({ build, patch, patchWith }: StepProps) {
 
       <div className="field-pair mb-5">
         <div>
-          <label className="label">Appearance</label>
+          <label className="field-label">Appearance</label>
           <textarea rows={3} value={build.appearance} placeholder="One line a stranger would notice first."
             onChange={(e) => patch({ appearance: e.target.value })} />
         </div>
         <div>
-          <label className="label">Flaw — the DM will use this</label>
+          <label className="field-label">Flaw — the DM will use this</label>
           <textarea rows={3} value={build.personality.flaw}
             placeholder="The way they reliably make things worse."
             onChange={(e) => patch({ personality: { ...build.personality, flaw: e.target.value } })} />
@@ -709,7 +729,7 @@ function StepHeader({ n, title, blurb }: { n: number; title: string; blurb: stri
     <div className="mb-5">
       <span className="label">Step {n} of 4</span>
       <h2 style={{ fontSize: '1.75rem', marginTop: '0.25rem' }}>{title}</h2>
-      <p className="prose-ink" style={{ color: 'var(--content-2)', fontSize: '0.9375rem', marginTop: '0.4rem', maxWidth: '46rem' }}>
+      <p className="prose-ink" style={{ color: 'var(--content-2)', fontSize: 'var(--text-base)', marginTop: '0.4rem', maxWidth: '46rem' }}>
         {blurb}
       </p>
     </div>

@@ -34,32 +34,33 @@
 }
 
 :root {
-  /* ---- DARK: ink and candlelight. Defined first so dark never flashes. ---- */
-  --surface:        #101113;
-  --panel:          #17191C;
-  --raised:         #1F2227;
-  --hairline:       #282C31;
-  --hairline-lit:   #383D44;
+  /* ---- DARK. Surfaces are derived from Smoky Rose's hue (357 deg) at low
+     saturation, so the ground belongs to the palette instead of being a
+     neutral grey the brand never chose. ---- */
+  --surface:        #120F0F;
+  --panel:          #1B1616;
+  --raised:         #261F1F;
+  --hairline:       #392D2E;
+  --hairline-lit:   #554445;
 
-  --content-1:      #EDE8DC;   /* 14.4:1 on panel — body, headings            */
-  --content-2:      #B6B0A3;   /*  8.2:1 on panel — secondary                 */
-  --content-3:      #938C7E;   /*  5.3:1 on panel — meta. The floor.          */
+  --content-1:      #EFEAE0;   /* 14.9:1 on panel */
+  --content-2:      #B9B3A8;   /*  8.6:1 on panel */
+  --content-3:      #938D83;   /*  5.4:1 on panel — the floor */
 
-  --rubric:         #E06B52;   /*  5.4:1 on panel — the working accent        */
-  --rubric-solid:   #B8402B;   /*  fill for primary actions                   */
-  --on-rubric:      #EDE8DC;   /*  4.5:1 on rubric-solid                      */
-  --gold:           #D9B063;   /*  8.7:1 — PRECIOUS ONLY                      */
+  --rubric:         #FE5F55;   /* Vibrant Coral — 5.95:1. Accent: selected, active */
+  --rubric-solid:   #FE5F55;
+  --on-rubric:      #1A0F10;   /*  6.2:1 on coral. NOT white: white is 3.0:1   */
+  --gold:           #C6ECAE;   /* Tea Green — 13.65:1. The "illuminated" note  */
 
-  --verdigris:      #5FA891;
-  --success:        #7FB069;
-  /* Problem text is NOT a second red: rubric already means "the scribe marked
-     this". Warnings carry a glyph plus readable content-1 text, and amber is
-     reserved for the state itself. One colour, one meaning (color.md). */
-  --warning:        #D8A657;
+  --verdigris:      #94C9A9;   /* Muted Teal — 9.5:1  */
+  --success:        #94C9A9;
+  --info:           #8E93B8;   /* Glaucous lifted — 6.0:1 (raw #777DA7 is 4.50:1) */
+  --warning:        #FE5F55;   /* shares the accent hue — see note on .issue-warn */
+  --rose:           #885053;   /* Smoky Rose — FILL ONLY on dark (2.9:1 as text) */
 
   --grain-opacity:  0.02;
   --art-dim:        0.30;
-  --scrim-rgb:      16, 17, 19;
+  --scrim-rgb:      18, 15, 15;
   --shadow:         0 1px 2px rgba(0,0,0,0.5), 0 8px 24px -12px rgba(0,0,0,0.7);
   color-scheme: dark;
 }
@@ -67,74 +68,94 @@
 /* LIGHT is not an inversion: it is the same ink on actual paper. */
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
-    --surface:      #E8E1CF;
-    --panel:        #F1EBDA;
-    --raised:       #DED6C1;
-    --hairline:     #CEC5AC;
-    --hairline-lit: #B2A88B;
+    --surface:      #EBF0E8;
+    --panel:        #F5F8F3;
+    --raised:       #E0E8DC;
+    --hairline:     #CAD5C3;
+    --hairline-lit: #AABAA0;
 
-    --content-1:    #1C1813;   /* 14.8:1 on panel */
-    --content-2:    #4A4336;   /*  8.2:1 on panel */
-    --content-3:    #5F5747;   /*  4.9:1 on raised, 6.0:1 on panel */
+    --content-1:    #1E1618;   /* 16.6:1 on panel */
+    --content-2:    #4A4043;   /*  9.3:1 on panel */
+    --content-3:    #625860;   /*  6.4:1 on panel */
 
-    --rubric:       #9E2B16;   /*  6.3:1 on panel */
-    --rubric-solid: #9E2B16;
-    --on-rubric:    #FFFFFF;
-    --gold:         #6E5110;   /*  5.1:1 on raised — precious only */
+    /* Hue preserved, lightness dropped. The raw palette is unusable as text on
+       a light ground — Tea Green measures 1.14:1 there. color.md › Best
+       practices requires supplying a variant for each appearance. */
+    --rubric:       #A80A00;   /* coral darkened     — 7.2:1 */
+    --rubric-solid: #A80A00;
+    --on-rubric:    #FFFFFF;   /*  7.0:1 on that fill        */
+    --gold:         #3C6E1C;   /* tea green darkened — 5.7:1 */
 
-    --verdigris:    #1F5F4C;
-    --success:      #355E24;
-    --warning:      #7A5410;
+    --verdigris:    #206F3F;   /* teal darkened      — 5.8:1 */
+    --success:      #206F3F;
+    --info:         #29368E;   /* glaucous darkened  — 9.7:1 */
+    --warning:      #A80A00;
+    --rose:         #633638;   /*  9.3:1 — usable as text on light */
 
     --grain-opacity: 0.045;
     --art-dim:      0.09;
-    --scrim-rgb:    232, 225, 207;
-    --shadow:       0 1px 2px rgba(60,48,28,0.10), 0 8px 24px -14px rgba(60,48,28,0.22);
+    --scrim-rgb:    235, 240, 232;
+    --shadow:       0 1px 2px rgba(30,40,25,0.10), 0 8px 24px -14px rgba(30,40,25,0.22);
     color-scheme: light;
   }
 }
 
 :root[data-theme="light"] {
-  --surface:      #E8E1CF;
-  --panel:        #F1EBDA;
-  --raised:       #DED6C1;
-  --hairline:     #CEC5AC;
-  --hairline-lit: #B2A88B;
+--surface:      #EBF0E8;
+  --panel:        #F5F8F3;
+  --raised:       #E0E8DC;
+  --hairline:     #CAD5C3;
+  --hairline-lit: #AABAA0;
 
-  --content-1:    #1C1813;
-  --content-2:    #4A4336;
-  --content-3:    #5F5747;   /*  4.9:1 on raised, 6.0:1 on panel */
+  --content-1:    #1E1618;   /* 16.6:1 on panel */
+  --content-2:    #4A4043;   /*  9.3:1 on panel */
+  --content-3:    #625860;   /*  6.4:1 on panel */
 
-  --rubric:       #9E2B16;
-  --rubric-solid: #9E2B16;
-  --on-rubric:    #FFFFFF;
-  --gold:         #6E5110;   /*  5.1:1 on raised — precious only */
+  /* Hue preserved, lightness dropped. The raw palette is unusable as text on
+     a light ground — Tea Green measures 1.14:1 there. color.md › Best
+     practices requires supplying a variant for each appearance. */
+  --rubric:       #A80A00;   /* coral darkened     — 7.2:1 */
+  --rubric-solid: #A80A00;
+  --on-rubric:    #FFFFFF;   /*  7.0:1 on that fill        */
+  --gold:         #3C6E1C;   /* tea green darkened — 5.7:1 */
 
-  --verdigris:    #1F5F4C;
-  --success:      #355E24;
-  --warning:      #7A5410;
+  --verdigris:    #206F3F;   /* teal darkened      — 5.8:1 */
+  --success:      #206F3F;
+  --info:         #29368E;   /* glaucous darkened  — 9.7:1 */
+  --warning:      #A80A00;
+  --rose:         #633638;   /*  9.3:1 — usable as text on light */
 
   --grain-opacity: 0.045;
   --art-dim:      0.09;
-  --scrim-rgb:    232, 225, 207;
-  --shadow:       0 1px 2px rgba(60,48,28,0.10), 0 8px 24px -14px rgba(60,48,28,0.22);
+  --scrim-rgb:    235, 240, 232;
+  --shadow:       0 1px 2px rgba(30,40,25,0.10), 0 8px 24px -14px rgba(30,40,25,0.22);
+
   color-scheme: light;
 }
 
 * { box-sizing: border-box; }
 
-/* Root size is a PERCENTAGE, not a pixel value. 93.75% of a 16px default is
-   15px, so the desktop design is pixel-identical — but every rem in the sheet
-   below now scales with the reader's browser text size instead of ignoring it.
-   A hard `font-size: 15px` here silently opted the whole app out of text
-   scaling (typography.md › Supporting Dynamic Type: "Make sure your app's
-   layout adapts to all font sizes"). */
+/* Root stays at the browser default (16px unless the reader changed it).
+   It was 93.75% (=15px), which quietly shrank EVERY rem in this sheet by 6%:
+   the "13px floor" rendered at 12.19px and .tag at 11.25px, under the 10pt
+   desktop minimum in typography.md › Ensuring legibility. Sizes are set per
+   element below instead, so the floor is a real floor and the reader's own
+   text-size setting is still respected. */
 html {
-  font-size: 93.75%;
+  font-size: 100%;
   -webkit-text-size-adjust: 100%;
 }
 
-body { font-size: 1rem; }
+/* ---- Type scale. Every value is the px it ACTUALLY renders at 16px root. ---- */
+:root {
+  --text-xs:   0.8125rem;  /* 13px — absolute floor, tags and dense numerals */
+  --text-sm:   0.875rem;   /* 14px — labels, meta, supporting lines          */
+  --text-base: 0.9375rem;  /* 15px — body copy and controls                  */
+  --text-md:   1rem;       /* 16px — card titles, emphasised body            */
+  --text-lg:   1.125rem;   /* 18px                                           */
+}
+
+body { font-size: var(--text-base); }
 
 html, body {
   background: var(--surface);
@@ -177,18 +198,30 @@ h3 { font-size: 1.125rem; line-height: 1.25; }
    3.3:1 was the single worst readability failure in the app. */
 .label {
   font-family: var(--font-ui);
-  font-size: 0.8125rem;
-  font-weight: 550;
-  letter-spacing: 0.055em;
+  font-size: var(--text-xs);        /* a real 13px */
+  font-weight: 650;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--content-3);
-  line-height: 1.3;
+  color: var(--content-2);          /* was content-3; caps need the extra weight AND contrast */
+  line-height: 1.35;
 }
-.label-strong { color: var(--content-2); }
+.label-strong { color: var(--content-1); }
+
+/* Form field label. Sentence case: all-caps destroys word shape, which is the
+   main cue for reading a short string quickly. Caps stay on eyebrows only. */
+.field-label {
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--content-1);
+  line-height: 1.35;
+  display: block;
+  margin-bottom: 0.3rem;
+}
 
 /* Functional secondary text: never below 13px, never below 4.5:1. */
-.meta { font-size: 0.8125rem; line-height: 1.45; color: var(--content-2); }
-.meta-quiet { font-size: 0.8125rem; line-height: 1.45; color: var(--content-3); }
+.meta { font-size: var(--text-sm); line-height: 1.5; color: var(--content-2); }
+.meta-quiet { font-size: var(--text-sm); line-height: 1.5; color: var(--content-3); }
 
 /* Numerals use the UI face, NOT IM Fell.
    IM Fell ships old-style (text) figures with no lining set, so "10" renders as
@@ -292,7 +325,7 @@ strong { font-weight: 400; color: var(--content-1); }
   text-align: left;
   color: var(--content-1);
   font-family: var(--font-ui);
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   transition: border-color 120ms ease, background 120ms ease;
 }
 .card-select:hover { border-color: var(--hairline-lit); background: var(--raised); }
@@ -314,9 +347,14 @@ strong { font-weight: 400; color: var(--content-1); }
 
 /* Card title / supporting line. */
 .card-title {
-  font-family: var(--font-display);
-  font-size: 1.1875rem;
-  line-height: 1.15;
+  /* NOT IM Fell SC. Small caps at ~17px flattens letter differentiation and was
+     the hardest thing on the page to read. IM Fell now appears only at display
+     sizes (h1, h2), where its character costs nothing. */
+  font-family: var(--font-ui);
+  font-size: var(--text-md);
+  font-weight: 620;
+  letter-spacing: 0.005em;
+  line-height: 1.25;
   color: var(--content-1);
   display: block;
 }
@@ -324,16 +362,16 @@ strong { font-weight: 400; color: var(--content-1); }
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.3rem 0.5rem;
-  margin-top: 0.35rem;
-  font-size: 0.8125rem;
+  gap: 0.35rem 0.5rem;
+  margin-top: 0.5rem;
+  font-size: var(--text-sm);
   color: var(--content-2);
 }
-.card-body { margin-top: 0.4rem; font-size: 0.8125rem; line-height: 1.5; color: var(--content-2); }
+.card-body { margin-top: 0.45rem; font-size: var(--text-sm); line-height: 1.55; color: var(--content-2); }
 
 /* Small inline tag inside a card. */
 .tag {
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   letter-spacing: 0.03em;
   padding: 0.1rem 0.4rem;
   border-radius: 4px;
@@ -345,7 +383,7 @@ strong { font-weight: 400; color: var(--content-1); }
 
 .chip {
   font-family: var(--font-ui);
-  font-size: 0.8125rem;
+  font-size: var(--text-sm);
   padding: 0.3rem 0.6rem;
   min-height: 30px;
   border-radius: 7px;
@@ -395,7 +433,7 @@ input[type="text"]:focus, textarea:focus, select:focus {
 .rarity[data-rarity="artifact"]  { --rarity-ink: var(--rubric); }
 
 /* Problem list: the mark is red, the words stay readable. */
-.issue { display: flex; gap: 0.5rem; font-size: 0.8125rem; line-height: 1.5; padding: 0.15rem 0; color: var(--content-1); }
+.issue { display: flex; gap: 0.5rem; font-size: var(--text-sm); line-height: 1.5; padding: 0.15rem 0; color: var(--content-1); }
 .issue::before { content: '✱'; color: var(--rubric); flex: none; line-height: 1.5; }
 .issue-warn { color: var(--content-2); }
 .issue-warn::before { content: '△'; color: var(--warning); }
@@ -444,11 +482,11 @@ input[type="text"]:focus, textarea:focus, select:focus {
   box-shadow: var(--shadow);
   color: var(--content-1);
   font-family: var(--font-ui);
-  font-size: 0.8125rem;
+  font-size: var(--text-sm);
   font-weight: 400;
   letter-spacing: 0;
   text-transform: none;
-  line-height: 1.45;
+  line-height: 1.5;
   white-space: normal;
   text-align: left;
   opacity: 0;
@@ -488,12 +526,12 @@ button:focus-visible [data-hint]::before { transform: translateX(-50%); }
    twelve choices rather than twelve pieces of notation. */
 .card-tagline {
   display: block;
-  margin-top: 0.3rem;
-  font-size: 0.8125rem;
-  line-height: 1.45;
+  margin-top: 0.35rem;
+  font-size: var(--text-sm);
+  line-height: 1.5;
   color: var(--content-2);
 }
-.card-class { min-height: 9.5rem; display: flex; flex-direction: column; }
+.card-class { min-height: 10.5rem; display: flex; flex-direction: column; }
 .card-class .card-meta { margin-top: auto; padding-top: 0.6rem; }
 
 /* ===========================================================================
@@ -965,3 +1003,26 @@ button:focus-visible [data-hint]::before { transform: translateX(-50%); }
   .opt-grid--dense .card-title { font-size: 1.0625rem; }
   .opt-grid--dense .card-select { padding-right: 1.9rem; }
 }
+
+/* ---- Class card with portrait -------------------------------------------
+   The thumbnail is decorative (alt=""): the class name beside it already
+   carries the meaning, so a screen reader announcing the portrait would just
+   be noise (images.md › Best practices). It loads the 128px thumb, never the
+   512px portrait — the slot is 56px. */
+.card-head { display: flex; gap: 0.7rem; align-items: flex-start; }
+.card-head-text { min-width: 0; flex: 1; }
+
+.card-portrait {
+  flex: none;
+  width: 74px;
+  height: 74px;
+  border-radius: 9px;
+  object-fit: cover;
+  border: 1px solid var(--hairline);
+  background: var(--raised);
+  /* No desaturation. The art is hand-inked with fine hatching, which already
+     loses contrast when downscaled — muting it further turned the faces to
+     mud at thumbnail size. */
+}
+.card-select[data-selected="true"] .card-portrait { border-color: var(--rubric); }
+.card-class .card-title { margin-top: 0.1rem; }

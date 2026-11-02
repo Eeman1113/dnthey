@@ -416,3 +416,18 @@ describe('scenery matching', () => {
     expect(missing.map((m) => m.id)).toEqual([]);
   });
 });
+
+describe('class art', () => {
+  it('covers every class with a file that exists', async () => {
+    const { CLASS_ART } = await import('@/ui/classArt');
+    const { CLASSES } = await import('@/data/srd/classes');
+    const { existsSync } = await import('node:fs');
+    for (const c of CLASSES) {
+      const art = CLASS_ART[c.id];
+      expect(art, `no art mapped for ${c.id}`).toBeTruthy();
+      expect(existsSync(`public/assets/portraits/${art!.id}.webp`), `missing ${art!.id}`).toBe(true);
+      expect(existsSync(`public/assets/portraits/${art!.id}@sm.webp`)).toBe(true);
+      expect(art!.alt.length).toBeGreaterThan(20);   // real alt text, not a filename
+    }
+  });
+});

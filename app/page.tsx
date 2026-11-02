@@ -12,7 +12,10 @@ export default function TitlePage() {
           alt=""
           fill
           priority
+          fetchPriority="high"
           sizes="100vw"
+          placeholder="blur"
+          blurDataURL="data:image/webp;base64,UklGRjwAAABXRUJQVlA4IDAAAADQAQCdASoQAAkAA4BaJZQCdAEO+DLgAAD+9ZkwVBOAxR17/pcn9fg+JOfSTH/+jgA="
           style={{ objectFit: 'cover', objectPosition: 'center 68%', opacity: 'var(--art-dim)' }}
         />
         <div
@@ -68,7 +71,7 @@ export default function TitlePage() {
       </div>
 
       <footer className="gutter py-6">
-        <p className="meta-quiet" style={{ maxWidth: '42rem', fontSize: '0.75rem', lineHeight: 1.6 }}>
+        <p className="meta-quiet" style={{ maxWidth: '42rem', fontSize: 'var(--text-xs)', lineHeight: 1.6 }}>
           Built on the System Reference Document 5.2.1, © Wizards of the Coast LLC,
           licensed under CC BY 4.0. Not affiliated with, endorsed, sponsored, or
           specifically approved by Wizards of the Coast LLC.

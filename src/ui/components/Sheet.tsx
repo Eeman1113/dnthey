@@ -59,7 +59,7 @@ export function Sheet({ build }: { build: CharacterBuild }) {
             <button
               type="button"
               className="label hint-term"
-              style={{ fontSize: '0.75rem', letterSpacing: '0.07em' }}
+              style={{ fontSize: 'var(--text-xs)', letterSpacing: '0.07em' }}
               data-hint={ABILITY_HINT[a]}
               aria-label={`${ABILITY_NAMES[a]}. ${ABILITY_HINT[a]}`}
             >
@@ -71,12 +71,12 @@ export function Sheet({ build }: { build: CharacterBuild }) {
             >
               {formatMod(d.mods[a])}
             </div>
-            <div className="meta-quiet" style={{ fontSize: '0.75rem' }}>{d.scores[a]}</div>
+            <div className="meta-quiet" style={{ fontSize: 'var(--text-xs)' }}>{d.scores[a]}</div>
             <button
               type="button"
               className="meta-quiet hint-term"
               style={{
-                fontSize: '0.75rem',
+                fontSize: 'var(--text-xs)',
                 marginTop: '0.2rem',
                 color: d.saves[a].proficient ? 'var(--rubric)' : 'var(--content-3)',
               }}
@@ -112,7 +112,7 @@ export function Sheet({ build }: { build: CharacterBuild }) {
                   className="flex justify-between items-baseline"
                   style={{
                     padding: '0.18rem 0',
-                    fontSize: '0.8125rem',
+                    fontSize: 'var(--text-sm)',
                     color: sk.proficient ? 'var(--content-1)' : 'var(--content-2)',
                   }}
                 >
@@ -135,7 +135,7 @@ export function Sheet({ build }: { build: CharacterBuild }) {
                     {sk.expertise && <span className="sr-only"> (expertise)</span>}
                     {!sk.expertise && sk.proficient && <span className="sr-only"> (proficient)</span>}
                   </span>
-                  <span className="stat-num" style={{ fontSize: '0.875rem' }}>{formatMod(sk.mod)}</span>
+                  <span className="stat-num" style={{ fontSize: 'var(--text-sm)' }}>{formatMod(sk.mod)}</span>
                 </li>
               );
             })}
@@ -152,13 +152,13 @@ export function Sheet({ build }: { build: CharacterBuild }) {
           {d.attacks.length > 0 && (
             <Group title="Attacks">
               {d.attacks.map((a) => (
-                <div key={a.weapon.id} className="flex justify-between items-baseline" style={{ padding: '0.18rem 0', fontSize: '0.8125rem' }}>
+                <div key={a.weapon.id} className="flex justify-between items-baseline" style={{ padding: '0.18rem 0', fontSize: 'var(--text-sm)' }}>
                   <span style={{ color: a.proficient ? 'var(--content-1)' : 'var(--content-3)' }}>
                     {a.weapon.name}
                     {a.masteryActive && (
                       <span
                         style={{
-                          color: 'var(--rubric)', fontSize: '0.75rem', marginLeft: '0.4rem',
+                          color: 'var(--rubric)', fontSize: 'var(--text-xs)', marginLeft: '0.4rem',
                           textTransform: 'uppercase', letterSpacing: '0.04em',
                         }}
                         title={MASTERY_TEXT[a.weapon.mastery]}
@@ -173,7 +173,7 @@ export function Sheet({ build }: { build: CharacterBuild }) {
                       </span>
                     )}
                   </span>
-                  <span className="stat-num" style={{ color: 'var(--content-2)', fontSize: '0.875rem' }}>
+                  <span className="stat-num" style={{ color: 'var(--content-2)', fontSize: 'var(--text-sm)' }}>
                     {formatMod(a.attackBonus)} · {a.damage}
                     {a.damageBonus !== 0 ? formatMod(a.damageBonus) : ''}
                   </span>
@@ -229,20 +229,20 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
 function Stat({ label, value, note }: { label: string; value: string | number; note?: string }) {
   return (
     <div className="panel-raised" style={{ padding: '0.6rem 0.7rem' }}>
-      <div className="label" style={{ fontSize: '0.75rem', letterSpacing: '0.05em' }}>{label}</div>
+      <div className="label" style={{ fontSize: 'var(--text-xs)', letterSpacing: '0.05em' }}>{label}</div>
       <div className="stat-num" style={{ fontSize: '1.625rem', color: 'var(--content-1)', lineHeight: 1.15 }}>
         {value}
       </div>
-      {note && <div className="meta-quiet" style={{ fontSize: '0.75rem' }}>{note}</div>}
+      {note && <div className="meta-quiet" style={{ fontSize: 'var(--text-xs)' }}>{note}</div>}
     </div>
   );
 }
 
 function Row({ k, v }: { k: string; v: string | number }) {
   return (
-    <div className="flex justify-between items-baseline" style={{ padding: '0.18rem 0', fontSize: '0.8125rem' }}>
+    <div className="flex justify-between items-baseline" style={{ padding: '0.18rem 0', fontSize: 'var(--text-sm)' }}>
       <span style={{ color: 'var(--content-2)' }}>{k}</span>
-      <span className="stat-num" style={{ color: 'var(--content-1)', fontSize: '0.875rem' }}>{v}</span>
+      <span className="stat-num" style={{ color: 'var(--content-1)', fontSize: 'var(--text-sm)' }}>{v}</span>
     </div>
   );
 }
