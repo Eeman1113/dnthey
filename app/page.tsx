@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Art } from '@/ui/components/Art';
 import { ModelStatus } from '@/ui/components/ModelStatus';
 import { ThemeToggle } from '@/ui/components/ThemeToggle';
+import { ContinueButton } from '@/ui/components/ContinueButton';
 
 export default function TitlePage() {
   return (
@@ -64,7 +65,7 @@ export default function TitlePage() {
           <Link href="/create" className="btn btn-primary" style={{ padding: '0.6rem 1.35rem' }}>
             Begin a new campaign
           </Link>
-          <button className="btn" disabled>Continue</button>
+          <ContinueButton />
         </div>
       </div>
 

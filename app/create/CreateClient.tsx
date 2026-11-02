@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Art } from '@/ui/components/Art';
 import { ABILITIES, ABILITY_NAMES, SKILL_NAMES, formatMod, type Ability, type Skill } from '@/engine/types';
@@ -9,7 +9,7 @@ import { SPECIES } from '@/data/srd/species';
 import { BACKGROUNDS, BACKGROUNDS_BY_ID } from '@/data/srd/backgrounds';
 import { FEATS_BY_ID, ORIGIN_FEATS } from '@/data/srd/feats';
 import { MASTERIES, MASTERY_TEXT, WEAPONS } from '@/data/srd/equipment';
-import { emptyBuild, validateBuild } from '@/character/builder';
+import { emptyBuild, isPlayable, validateBuild } from '@/character/builder';
 import {
   STANDARD_ARRAY, POINT_BUY_BUDGET, POINT_BUY_COST, pointBuyRemaining, emptyScores,
 } from '@/character/scores';
@@ -38,8 +38,15 @@ const NEXT_LABEL: Record<Step, string> = {
   Class: 'Continue to Origin',
   Origin: 'Continue to Abilities',
   Abilities: 'Continue to Details',
-  Details: 'Begin the campaign (M2)',
+  Details: 'Save character',
 };
+
+/** Where finished characters are kept until there is a play screen to open them in. */
+const SAVE_KEY = 'dnthey.characters';
+/** Keep the list short; this is a local convenience, not an archive. */
+const SAVE_LIMIT = 20;
+
+type SaveState = 'idle' | 'saved' | 'error';
 
 export function CreateClient() {
   const [step, setStep] = useState<Step>('Class');
@@ -87,8 +94,7 @@ export function CreateClient() {
   const nextStep = NEXT[step];
   const nextBlocked =
     (step === 'Class' && !build.classId) ||
-    (step === 'Origin' && !(species && build.backgroundId)) ||
-    step === 'Details';
+    (step === 'Origin' && !(species && build.backgroundId));
 
   // Tap the grabber to cycle detents; drag it to set one directly. The gesture
   // is never the only route in (accessibility.md > Mobility: "offer onscreen
@@ -98,6 +104,86 @@ export function CreateClient() {
 
   const statusText = errors.length === 0 && ready ? 'playable' : `${errors.length} to resolve`;
 
+  /**
+   * The docked sheet names the character as far as it exists yet.
+   *
+   * On step one this is the only confirmation of the class you just picked
+   * that is guaranteed to be on screen: the selection card sits at the end of
+   * a twelve-item grid, and tapping a card in the top row leaves it far below
+   * the fold. layout.md > Visual hierarchy asks that the layout keep the
+   * things people need where they can see them, and the dock is the one part
+   * of this screen that is always visible.
+   */
+  const identity = ready
+    ? `${build.name || 'Unnamed'}, level ${build.level} ${species?.name ?? ''} ${cls?.name ?? ''}`
+        .replace(/\s+/g, ' ')
+        .trim()
+    : [species?.name, cls?.name].filter(Boolean).join(' ') || 'Fills in as you choose';
+
+  /* ---- Saving ------------------------------------------------------------
+     The play screen does not exist yet, so the end of this flow used to be a
+     permanently unavailable button labelled with an internal milestone name.
+     Saving locally is the honest version of "you are finished": the work is
+     kept, and the interface says plainly what is and is not built yet.
+     feedback.md: keep confirmation in the interface rather than an alert.  */
+  const playable = useMemo(() => isPlayable(build), [build]);
+  const [saveState, setSaveState] = useState<SaveState>('idle');
+  // Any further edit makes the saved copy stale, so the action comes back.
+  useEffect(() => { setSaveState('idle'); }, [build]);
+
+  const saveCharacter = () => {
+    try {
+      const raw = window.localStorage.getItem(SAVE_KEY);
+      const parsed: unknown = raw ? JSON.parse(raw) : [];
+      const list = Array.isArray(parsed) ? parsed : [];
+      const next = [...list, { ...build, savedAt: new Date().toISOString() }].slice(-SAVE_LIMIT);
+      window.localStorage.setItem(SAVE_KEY, JSON.stringify(next));
+      setSaveState('saved');
+    } catch {
+      // Private browsing, a storage quota, or a blocked origin all land here.
+      setSaveState('error');
+    }
+  };
+
+  /**
+   * The dock reserves space at the bottom of the page, and a constant cannot
+   * be right: at the largest accessibility text sizes the dock measured 370px
+   * against a reserved 280px, which put the bottom 90px of every step out of
+   * reach. Measure the real thing instead. Only the collapsed parts count,
+   * because the expanded detent is an overlay, not reserved space.
+   */
+  const asideRef = useRef<HTMLElement | null>(null);
+  useLayoutEffect(() => {
+    const el = asideRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const measure = () => {
+      const h = el.querySelector('.dock-handle')?.getBoundingClientRect().height ?? 0;
+      const a = el.querySelector('.dock-action')?.getBoundingClientRect().height ?? 0;
+      document.documentElement.style.setProperty('--dock-h', `${Math.round(h + a)}px`);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      document.documentElement.style.removeProperty('--dock-h');
+    };
+  }, []);
+
+  /**
+   * Keep the current segment visible. The step rail scrolls horizontally once
+   * the four labels stop fitting, which is what happens at large text sizes,
+   * and a progress indicator that has scrolled the current step off its own
+   * edge is worse than no indicator.
+   */
+  const railRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    const rail = railRef.current;
+    const active = rail?.querySelector<HTMLElement>('[data-active="true"]');
+    if (!rail || !active) return;
+    rail.scrollLeft = active.offsetLeft - (rail.clientWidth - active.offsetWidth) / 2;
+  }, [step]);
+
   return (
     <main className="min-h-screen">
       {/* Brand and controls on one row, the step rail on its own full-width row
@@ -105,7 +191,7 @@ export function CreateClient() {
       <header className="create-bar gutter border-b" style={{ borderColor: 'var(--hairline)' }}>
         <Link href="/" className="label label-strong create-bar__brand" style={{ textDecoration: 'none' }}>← dnthey</Link>
 
-        <nav className="step-rail create-bar__rail" aria-label="Creation steps">
+        <nav className="step-rail create-bar__rail" aria-label="Creation steps" ref={railRef}>
           {STEPS.map((s, i) => (
             <button
               key={s}
@@ -132,7 +218,12 @@ export function CreateClient() {
           {step === 'Class' && <ClassStep build={build} patch={patch} patchWith={patchWith} onNext={() => setStep('Origin')} />}
           {step === 'Origin' && <OriginStep build={build} patch={patch} patchWith={patchWith} onNext={() => setStep('Abilities')} />}
           {step === 'Abilities' && <AbilitiesStep build={build} patch={patch} patchWith={patchWith} onNext={() => setStep('Details')} />}
-          {step === 'Details' && <DetailsStep build={build} patch={patch} patchWith={patchWith} />}
+          {step === 'Details' && (
+            <DetailsStep
+              build={build} patch={patch} patchWith={patchWith}
+              playable={playable} saveState={saveState} onSave={saveCharacter}
+            />
+          )}
         </section>
 
         {/* Tapping the scrim is the way out that is not the Done button
@@ -155,7 +246,9 @@ export function CreateClient() {
           who this character is, their armour class and hit points, and what is
           left to resolve; expanded it is the whole sheet.
         */}
-        <aside className="live-aside" data-open={sheetOpen}>
+        {/* `data-bottom-dock` marks the one fixed layer at the bottom of the
+            viewport, so HintLayer can keep a popover clear of it. */}
+        <aside className="live-aside" data-open={sheetOpen} data-bottom-dock ref={asideRef}>
           <button
             type="button"
             className="dock-handle hide-wide"
@@ -178,11 +271,7 @@ export function CreateClient() {
               <span className="label" style={{ display: 'block' }}>
                 {sheetOpen ? 'Hide character sheet' : 'Character sheet'}
               </span>
-              <span className="meta" style={{ display: 'block' }}>
-                {ready
-                  ? `${build.name || 'Unnamed'}, level ${build.level} ${species?.name ?? ''} ${cls?.name ?? ''}`
-                  : 'Fills in as you choose'}
-              </span>
+              <span className="meta" style={{ display: 'block' }}>{identity}</span>
             </span>
             <span className="dock-handle__stats">
               {peek ? (
@@ -225,13 +314,17 @@ export function CreateClient() {
               practices). Unavailable until the step's required data is there
               (entering-data.md > Best practices). */}
           <div className="dock-action hide-wide">
-            <button
-              className="btn btn-primary"
-              disabled={nextBlocked}
-              onClick={() => { if (nextStep) setStep(nextStep); }}
-            >
-              {NEXT_LABEL[step]}
-            </button>
+            {step === 'Details' ? (
+              <SaveAction playable={playable} state={saveState} onSave={saveCharacter} />
+            ) : (
+              <button
+                className="btn btn-primary"
+                disabled={nextBlocked}
+                onClick={() => { if (nextStep) setStep(nextStep); }}
+              >
+                {NEXT_LABEL[step]}
+              </button>
+            )}
           </div>
         </aside>
       </div>
@@ -250,7 +343,10 @@ function ClassStep({ build, patch, onNext }: StepProps) {
         n={1} title="Choose a class"
         blurb="In the 2024 rules you pick your class first. It is the biggest decision about how you will actually play."
       />
-      <div className="opt-grid" style={{ ['--opt-min' as string]: '16.5rem' }}>
+      {/* `--art`: two up on a phone. One portrait card per row meant 3,500px
+          of scrolling for twelve options, and left the art floating in the
+          middle of a card three times its width. */}
+      <div className="opt-grid opt-grid--art" style={{ ['--opt-min' as string]: '16.5rem' }}>
         {CLASSES.map((c) => (
           <button
             key={c.id}
@@ -323,9 +419,17 @@ function ClassStep({ build, patch, onNext }: StepProps) {
                 aria-expanded={showFeatures}
                 onClick={() => setShowFeatures((v) => !v)}
               >
+                {/* A disclosure points down when its content is hidden and up
+                    when it is visible (disclosure-controls.md > Disclosure
+                    buttons), so the control says which way it goes. */}
+                <span aria-hidden>{showFeatures ? '\u25B4' : '\u25BE'}</span>
                 {showFeatures ? 'Hide details' : 'What you get'}
               </button>
-              <button className="btn btn-primary" onClick={onNext}>Continue to Origin</button>
+              {/* Desktop only. On a phone the sheet dock carries the step's
+                  one prominent action, and a second copy of it inside a
+                  second bottom bar was both a duplicate and, at z-index 30
+                  under a z-index 40 dock, invisible. */}
+              <button className="btn btn-primary hide-compact" onClick={onNext}>Continue to Origin</button>
             </div>
           </div>
 
@@ -635,7 +739,7 @@ function AbilitiesStep({ build, patch, onNext }: StepProps) {
 
 /* -------------------------------------------------------------- Details */
 
-function DetailsStep({ build, patch, patchWith }: StepProps) {
+function DetailsStep({ build, patch, patchWith, playable, saveState, onSave }: StepProps & SaveProps) {
   const cls = CLASSES.find((c) => c.id === build.classId);
   const masteryCount = cls?.weaponMasteryCount ?? 0;
 
@@ -730,7 +834,78 @@ function DetailsStep({ build, patch, patchWith }: StepProps) {
         </div>
       </div>
 
-      <button className="btn btn-primary hide-compact" disabled>Begin the campaign (M2)</button>
+      <div className="dock-action hide-compact" style={{ padding: 0 }}>
+        <SaveAction playable={playable} state={saveState} onSave={onSave} grow={false} />
+      </div>
+    </>
+  );
+}
+
+/* ----------------------------------------------------------------- saving */
+
+interface SaveProps {
+  playable: boolean;
+  saveState: SaveState;
+  onSave: () => void;
+}
+
+/**
+ * The last action in the flow, shown in the sheet dock on a phone and inline
+ * on desktop.
+ *
+ * It was a permanently disabled button reading "Begin the campaign (M2)".
+ * Two problems: "M2" is an internal milestone name, and a control that can
+ * never do anything and never says why reads as a broken app
+ * (gestures.md > Best practices, on unavailable controls). The campaign is
+ * genuinely not built, so the button does the thing that IS true at the end
+ * of this flow: it keeps the character.
+ *
+ * The label follows the action through: "Save character" becomes "Saved",
+ * and the confirmation is a line in the interface rather than an alert
+ * (feedback.md). The saved state is announced politely rather than grabbing
+ * focus.
+ */
+function SaveAction({ playable, state, onSave, grow = true }: {
+  playable: boolean;
+  state: SaveState;
+  onSave: () => void;
+  grow?: boolean;
+}) {
+  return (
+    <>
+      {state === 'saved' ? (
+        <button
+          type="button"
+          className="btn btn-done"
+          aria-disabled="true"
+          style={grow ? undefined : { flex: '0 0 auto' }}
+        >
+          <span aria-hidden>✓</span> Saved
+        </button>
+      ) : (
+        <button
+          type="button"
+          className="btn btn-primary"
+          disabled={!playable}
+          onClick={onSave}
+          style={grow ? undefined : { flex: '0 0 auto' }}
+        >
+          Save character
+        </button>
+      )}
+      <div className="dock-note" role="status" aria-live="polite">
+        {state === 'saved' && (
+          <p className="meta-quiet">
+            Kept on this device. Playing the campaign is the next part being built.
+          </p>
+        )}
+        {state === 'error' && (
+          <p className="issue">
+            Could not save. This browser is blocking storage for the page, which
+            private browsing usually does.
+          </p>
+        )}
+      </div>
     </>
   );
 }

@@ -3,6 +3,25 @@
 import { useEffect, useRef, useState } from 'react';
 
 /**
+ * How much of the bottom of the viewport is covered by a fixed bar.
+ *
+ * The creator docks the live character sheet there, so "is there room below
+ * the term" is not the same question as "is there room below the term before
+ * the bottom of the screen". Measured, not assumed: the dock's height tracks
+ * the reader's text size.
+ */
+function bottomObstruction() {
+  let worst = 0;
+  for (const el of Array.from(document.querySelectorAll('[data-bottom-dock]'))) {
+    if (getComputedStyle(el).position !== 'fixed') continue;
+    const r = el.getBoundingClientRect();
+    if (r.height === 0) continue;
+    worst = Math.max(worst, window.innerHeight - r.top);
+  }
+  return Math.max(0, Math.min(worst, window.innerHeight));
+}
+
+/**
  * Touch affordance for the `[data-hint]` jargon help.
  *
  * The hints are CSS `:hover` tooltips, which is correct on a pointer, Apple
@@ -29,10 +48,13 @@ import { useEffect, useRef, useState } from 'react';
  *    terms in the character sheet, from `:focus-visible`.
  */
 export function HintLayer() {
-  const [pop, setPop] = useState<{ text: string; top?: number; bottom?: number } | null>(null);
+  /** Anchor rectangle of the tapped term; the popover is placed from it after
+      it has been measured, because its height depends on the text. */
+  const [pop, setPop] = useState<{ text: string; anchorTop: number; anchorBottom: number } | null>(null);
   /** Pointer tooltip. Separate from `pop`, which is the touch popover. */
   const [tip, setTip] = useState<{ text: string; x: number; y: number } | null>(null);
   const tipRef = useRef<HTMLDivElement | null>(null);
+  const popRef = useRef<HTMLDivElement | null>(null);
   const openRef = useRef(false);
   const coarseRef = useRef(false);
 
@@ -69,14 +91,9 @@ export function HintLayer() {
         e.stopPropagation();
         const r = host.getBoundingClientRect();
         // Full-width minus gutters, so there is no horizontal math to get
-        // wrong at 320px. Below the term by preference, above it the card
-        // would hide the very option the term describes, and above only when
-        // the lower half of the screen has no room.
-        setPop(
-          window.innerHeight - r.bottom > 190
-            ? { text, top: Math.round(r.bottom + 10) }
-            : { text, bottom: Math.round(window.innerHeight - r.top + 10) },
-        );
+        // wrong at 320px. Vertical placement is decided after measuring, in
+        // the layout effect below.
+        setPop({ text, anchorTop: Math.round(r.top), anchorBottom: Math.round(r.bottom) });
         return;
       }
 
@@ -155,6 +172,38 @@ export function HintLayer() {
     el.style.visibility = 'visible';
   }, [tip]);
 
+  /**
+   * Place the touch popover.
+   *
+   * It prefers to sit below the term, because the card above it is the very
+   * option the term describes and covering it would be self defeating. It
+   * only fits below if there is room between the term and whatever covers
+   * the bottom of the viewport: with the character sheet docked there, a
+   * popover measured against the full window height was drawn half behind
+   * the dock, taking its "Got it" button with it. Measuring the popover and
+   * the obstruction is the only way to get this right at every text size.
+   */
+  useEffect(() => {
+    const el = popRef.current;
+    if (!el || !pop) return;
+    const M = 8;
+    const gap = 10;
+    const h = el.getBoundingClientRect().height;
+    const floor = window.innerHeight - bottomObstruction();
+    const roomBelow = floor - pop.anchorBottom - gap;
+    const roomAbove = pop.anchorTop - gap - M;
+
+    let top: number;
+    if (h <= roomBelow) top = pop.anchorBottom + gap;
+    else if (h <= roomAbove) top = pop.anchorTop - gap - h;
+    // Neither side fits, which happens at the largest text sizes. Pin it to
+    // the top of the viewport, where the whole hint is at least readable.
+    else top = M;
+
+    el.style.top = `${Math.round(Math.max(M, top))}px`;
+    el.style.visibility = 'visible';
+  }, [pop]);
+
   if (!pop && !tip) return null;
 
   return (
@@ -171,25 +220,28 @@ export function HintLayer() {
         </div>
       )}
       {pop && (
-    <div
-      data-hint-pop
-      role="status"
-      aria-live="polite"
-      className="hint-pop"
-      style={{
-        left: 'max(0.75rem, env(safe-area-inset-left))',
-        right: 'max(0.75rem, env(safe-area-inset-right))',
-        top: pop.top,
-        bottom: pop.bottom,
-      }}
-    >
-      {pop.text}
-      <div>
-        <button type="button" className="hint-pop__close" onClick={() => setPop(null)}>
-          Got it
-        </button>
-      </div>
-    </div>
+        <div
+          ref={popRef}
+          data-hint-pop
+          role="status"
+          aria-live="polite"
+          className="hint-pop"
+          // Placed by the layout effect above; hidden until then so the
+          // unplaced position is never painted.
+          style={{
+            left: 'max(0.75rem, env(safe-area-inset-left))',
+            right: 'max(0.75rem, env(safe-area-inset-right))',
+            top: 0,
+            visibility: 'hidden',
+          }}
+        >
+          {pop.text}
+          <div>
+            <button type="button" className="hint-pop__close" onClick={() => setPop(null)}>
+              Got it
+            </button>
+          </div>
+        </div>
       )}
     </>
   );
