@@ -8,13 +8,19 @@ import { SPECIES_BY_ID } from '@/data/srd/species';
 import { BACKGROUNDS_BY_ID } from '@/data/srd/backgrounds';
 import { MASTERY_TEXT } from '@/data/srd/equipment';
 
-/** Live character sheet. Reads only from derive() so it can never disagree with the engine. */
+/**
+ * Live character sheet. Reads only from derive(), so it can never disagree
+ * with the engine.
+ *
+ * Typography floor: nothing here is below 13px. The previous version used 9px
+ * labels, which is well under the 13px desktop minimum and was unreadable.
+ */
 export function Sheet({ build }: { build: CharacterBuild }) {
   let d;
   try {
     d = derive(build);
   } catch (e) {
-    return <p style={{ color: 'var(--failure)' }}>{(e as Error).message}</p>;
+    return <p className="issue">{(e as Error).message}</p>;
   }
 
   const cls = CLASSES_BY_ID[build.classId]!;
@@ -22,20 +28,19 @@ export function Sheet({ build }: { build: CharacterBuild }) {
   const bg = BACKGROUNDS_BY_ID[build.backgroundId]!;
 
   return (
-    <div className="panel p-5">
+    <div className="panel" style={{ padding: '1.25rem' }}>
       <div className="flex items-baseline justify-between gap-3">
-        <h2 style={{ fontSize: '1.6rem', lineHeight: 1.1 }}>
-          {build.name || <span style={{ color: 'var(--parchment-faint)' }}>Unnamed</span>}
+        <h2 style={{ fontSize: '1.5rem' }}>
+          {build.name || <span style={{ color: 'var(--content-3)' }}>Unnamed</span>}
         </h2>
-        <span className="label-xs">{build.pronouns}</span>
+        <span className="meta-quiet">{build.pronouns}</span>
       </div>
-      <p className="label-xs mt-1" style={{ color: 'var(--gold-dim)' }}>
+      <p className="meta" style={{ marginTop: '0.2rem', color: 'var(--content-2)' }}>
         Level {build.level} {species.name} {cls.name} · {bg.name}
       </p>
 
-      <div className="rule-gold my-4" />
+      <hr className="rule" style={{ margin: '1rem 0' }} />
 
-      {/* Headline combat numbers */}
       <div className="grid grid-cols-4 gap-2 mb-4">
         <Stat label="Armor Class" value={d.armorClass} note={d.armorNote} />
         <Stat label="Hit Points" value={d.maxHp} note={`d${d.hitDie} hit die`} />
@@ -43,150 +48,170 @@ export function Sheet({ build }: { build: CharacterBuild }) {
         <Stat label="Speed" value={`${d.speed} ft`} />
       </div>
 
-      {/* Abilities */}
-      <div className="grid grid-cols-6 gap-2 mb-4">
+      <div className="grid grid-cols-6 gap-1.5 mb-5">
         {ABILITIES.map((a) => (
-          <div key={a} className="panel-raised px-2 py-2 text-center">
-            <div className="label-xs" style={{ fontSize: '0.5625rem' }}>{a}</div>
-            <div className="stat-num" style={{ fontSize: '1.5rem', color: 'var(--parchment)' }}>
-              {formatMod(d.mods[a])}
-            </div>
-            <div className="label-xs" style={{ fontSize: '0.625rem', color: 'var(--parchment-faint)' }}>
-              {d.scores[a]}
+          <div
+            key={a}
+            className="panel-raised"
+            style={{ padding: '0.5rem 0.25rem', textAlign: 'center' }}
+            title={ABILITY_NAMES[a]}
+          >
+            <div className="label" style={{ fontSize: '0.75rem', letterSpacing: '0.07em' }}>
+              {a}
             </div>
             <div
-              className="label-xs mt-1"
-              style={{ fontSize: '0.5625rem', color: d.saves[a].proficient ? 'var(--gold)' : 'var(--parchment-faint)' }}
-              title={`${ABILITY_NAMES[a]} saving throw`}
+              className="stat-num"
+              style={{ fontSize: '1.5rem', color: 'var(--content-1)', lineHeight: 1.2 }}
             >
-              save {formatMod(d.saves[a].mod)}
+              {formatMod(d.mods[a])}
+            </div>
+            <div className="meta-quiet" style={{ fontSize: '0.75rem' }}>{d.scores[a]}</div>
+            <div
+              className="meta-quiet"
+              style={{
+                fontSize: '0.75rem',
+                marginTop: '0.2rem',
+                color: d.saves[a].proficient ? 'var(--rubric)' : 'var(--content-3)',
+              }}
+            >
+              {d.saves[a].proficient ? '◆' : '·'} {formatMod(d.saves[a].mod)}
             </div>
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        {/* Skills */}
+      <div className="grid grid-cols-2 gap-5">
         <section>
-          <h3 className="label-xs mb-2">Skills · prof +{d.proficiencyBonus}</h3>
-          <ul style={{ fontSize: '0.8125rem' }}>
+          <h3 className="label" style={{ marginBottom: '0.5rem' }}>
+            Skills · prof {formatMod(d.proficiencyBonus)}
+          </h3>
+          <ul>
             {SKILLS.map((s) => {
               const sk = d.skills[s];
               return (
                 <li
                   key={s}
-                  className="flex justify-between py-[3px]"
-                  style={{ color: sk.proficient ? 'var(--parchment)' : 'var(--parchment-faint)' }}
+                  className="flex justify-between items-baseline"
+                  style={{
+                    padding: '0.18rem 0',
+                    fontSize: '0.8125rem',
+                    color: sk.proficient ? 'var(--content-1)' : 'var(--content-2)',
+                  }}
                 >
                   <span>
-                    {sk.expertise ? '◆ ' : sk.proficient ? '◇ ' : '　'}
+                    <span
+                      aria-hidden
+                      style={{
+                        display: 'inline-block', width: '0.9rem',
+                        color: sk.expertise ? 'var(--rubric)' : 'var(--content-3)',
+                      }}
+                    >
+                      {sk.expertise ? '◆' : sk.proficient ? '◇' : ''}
+                    </span>
                     {SKILL_NAMES[s]}
+                    {sk.expertise && <span className="sr-only"> (expertise)</span>}
                   </span>
-                  <span className="stat-num">{formatMod(sk.mod)}</span>
+                  <span className="stat-num" style={{ fontSize: '0.875rem' }}>{formatMod(sk.mod)}</span>
                 </li>
               );
             })}
           </ul>
         </section>
 
-        <section className="flex flex-col gap-4">
-          <div>
-            <h3 className="label-xs mb-2">Passive</h3>
-            <div style={{ fontSize: '0.8125rem' }}>
-              <Row k="Perception" v={d.passivePerception} />
-              <Row k="Insight" v={d.passiveInsight} />
-              <Row k="Investigation" v={d.passiveInvestigation} />
-            </div>
-          </div>
+        <section className="flex flex-col gap-5">
+          <Group title="Passive">
+            <Row k="Perception" v={d.passivePerception} />
+            <Row k="Insight" v={d.passiveInsight} />
+            <Row k="Investigation" v={d.passiveInvestigation} />
+          </Group>
 
           {d.attacks.length > 0 && (
-            <div>
-              <h3 className="label-xs mb-2">Attacks</h3>
-              <div style={{ fontSize: '0.8125rem' }}>
-                {d.attacks.map((a) => (
-                  <div key={a.weapon.id} className="flex justify-between py-[3px]">
-                    <span style={{ color: a.proficient ? 'var(--parchment)' : 'var(--failure)' }}>
-                      {a.weapon.name}
-                      {a.masteryActive && (
-                        <span
-                          style={{ color: 'var(--gold)', fontSize: '0.6875rem', marginLeft: 6 }}
-                          title={MASTERY_TEXT[a.weapon.mastery]}
-                        >
-                          {a.weapon.mastery}
-                        </span>
-                      )}
-                    </span>
-                    <span className="stat-num" style={{ color: 'var(--parchment-dim)' }}>
-                      {formatMod(a.attackBonus)} · {a.damage}
-                      {a.damageBonus !== 0 ? formatMod(a.damageBonus) : ''}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <Group title="Attacks">
+              {d.attacks.map((a) => (
+                <div key={a.weapon.id} className="flex justify-between items-baseline" style={{ padding: '0.18rem 0', fontSize: '0.8125rem' }}>
+                  <span style={{ color: a.proficient ? 'var(--content-1)' : 'var(--content-3)' }}>
+                    {a.weapon.name}
+                    {a.masteryActive && (
+                      <span
+                        style={{
+                          color: 'var(--rubric)', fontSize: '0.75rem', marginLeft: '0.4rem',
+                          textTransform: 'uppercase', letterSpacing: '0.04em',
+                        }}
+                        title={MASTERY_TEXT[a.weapon.mastery]}
+                      >
+                        {a.weapon.mastery}
+                      </span>
+                    )}
+                    {!a.proficient && (
+                      <span title="Not proficient — no proficiency bonus on this attack">
+                        <span aria-hidden style={{ color: 'var(--warning)', marginLeft: '0.3rem' }}>△</span>
+                        <span className="sr-only"> (not proficient)</span>
+                      </span>
+                    )}
+                  </span>
+                  <span className="stat-num" style={{ color: 'var(--content-2)', fontSize: '0.875rem' }}>
+                    {formatMod(a.attackBonus)} · {a.damage}
+                    {a.damageBonus !== 0 ? formatMod(a.damageBonus) : ''}
+                  </span>
+                </div>
+              ))}
+            </Group>
           )}
 
           {d.spellSaveDc !== null && (
-            <div>
-              <h3 className="label-xs mb-2">Spellcasting</h3>
-              <div style={{ fontSize: '0.8125rem' }}>
-                <Row k="Save DC" v={d.spellSaveDc} />
-                <Row k="Attack" v={formatMod(d.spellAttackBonus ?? 0)} />
-                <Row
-                  k="Slots"
-                  v={d.spellSlots.length ? d.spellSlots.map((n, i) => `${i + 1}:${n}`).join(' ') : '—'}
-                />
-              </div>
-            </div>
+            <Group title="Spellcasting">
+              <Row k="Save DC" v={d.spellSaveDc} />
+              <Row k="Attack" v={formatMod(d.spellAttackBonus ?? 0)} />
+              <Row k="Slots" v={d.spellSlots.length ? d.spellSlots.map((n, i) => `${i + 1}:${n}`).join('  ') : '—'} />
+            </Group>
           )}
 
           {d.pactSlots && (
-            <div>
-              <h3 className="label-xs mb-2">Pact Magic</h3>
-              <div style={{ fontSize: '0.8125rem' }}>
-                <Row k="Slots" v={`${d.pactSlots.count} × level ${d.pactSlots.level}`} />
-              </div>
-            </div>
+            <Group title="Pact Magic">
+              <Row k="Slots" v={`${d.pactSlots.count} × level ${d.pactSlots.level}`} />
+            </Group>
           )}
 
-          <div>
-            <h3 className="label-xs mb-2">Carry</h3>
-            <div style={{ fontSize: '0.8125rem' }}>
-              <Row k="Capacity" v={`${d.carryingCapacity} lb`} />
-              {d.stealthDisadvantage && (
-                <p style={{ color: 'var(--blood-lit)', fontSize: '0.75rem', marginTop: 4 }}>
-                  Disadvantage on Stealth from armor
-                </p>
-              )}
-            </div>
-          </div>
+          <Group title="Carry">
+            <Row k="Capacity" v={`${d.carryingCapacity} lb`} />
+            {d.stealthDisadvantage && (
+              <p className="issue issue-warn" style={{ marginTop: '0.3rem' }}>
+                Disadvantage on Stealth from armor
+              </p>
+            )}
+          </Group>
         </section>
       </div>
     </div>
   );
 }
 
+function Group({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <h3 className="label" style={{ marginBottom: '0.4rem' }}>{title}</h3>
+      {children}
+    </div>
+  );
+}
+
 function Stat({ label, value, note }: { label: string; value: string | number; note?: string }) {
   return (
-    <div className="panel-raised px-3 py-2">
-      <div className="label-xs" style={{ fontSize: '0.5625rem' }}>{label}</div>
-      <div className="stat-num" style={{ fontSize: '1.65rem', color: 'var(--gold)', lineHeight: 1.1 }}>
+    <div className="panel-raised" style={{ padding: '0.6rem 0.7rem' }}>
+      <div className="label" style={{ fontSize: '0.75rem', letterSpacing: '0.05em' }}>{label}</div>
+      <div className="stat-num" style={{ fontSize: '1.625rem', color: 'var(--content-1)', lineHeight: 1.15 }}>
         {value}
       </div>
-      {note && (
-        <div className="label-xs" style={{ fontSize: '0.5625rem', textTransform: 'none', letterSpacing: 0 }}>
-          {note}
-        </div>
-      )}
+      {note && <div className="meta-quiet" style={{ fontSize: '0.75rem' }}>{note}</div>}
     </div>
   );
 }
 
 function Row({ k, v }: { k: string; v: string | number }) {
   return (
-    <div className="flex justify-between py-[3px]">
-      <span style={{ color: 'var(--parchment-dim)' }}>{k}</span>
-      <span className="stat-num">{v}</span>
+    <div className="flex justify-between items-baseline" style={{ padding: '0.18rem 0', fontSize: '0.8125rem' }}>
+      <span style={{ color: 'var(--content-2)' }}>{k}</span>
+      <span className="stat-num" style={{ color: 'var(--content-1)', fontSize: '0.875rem' }}>{v}</span>
     </div>
   );
 }

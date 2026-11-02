@@ -37,7 +37,7 @@ export function ThemeToggle() {
       role="radiogroup"
       aria-label="Colour theme"
       className="flex items-center gap-0.5 p-0.5"
-      style={{ border: '1px solid var(--ink-line)', borderRadius: 4, background: 'var(--ink-black)' }}
+      style={{ border: '1px solid var(--hairline)', borderRadius: 8, background: 'var(--panel)' }}
     >
       {options.map((o) => {
         // Before mount we do not know the stored value; render unselected rather
@@ -52,15 +52,16 @@ export function ThemeToggle() {
             title={o.label}
             onClick={() => choose(o.id)}
             style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: '0.8125rem',
+              fontFamily: 'var(--font-ui)',
+              fontSize: '0.875rem',
               lineHeight: 1,
-              padding: '0.3rem 0.45rem',
-              borderRadius: 3,
+              width: 30, height: 28,
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              borderRadius: 6,
               border: 'none',
               cursor: 'pointer',
-              background: active ? 'var(--ink-raised)' : 'transparent',
-              color: active ? 'var(--gold)' : 'var(--parchment-faint)',
+              background: active ? 'var(--raised)' : 'transparent',
+              color: active ? 'var(--rubric)' : 'var(--content-3)',
               transition: 'color 120ms, background 120ms',
             }}
           >

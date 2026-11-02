@@ -48,8 +48,8 @@ export function CreateClient() {
 
   return (
     <main className="min-h-screen">
-      <header className="flex items-center justify-between px-8 py-4 border-b" style={{ borderColor: 'var(--ink-line)' }}>
-        <Link href="/" className="label-xs" style={{ textDecoration: 'none' }}>← dnthey</Link>
+      <header className="flex items-center justify-between px-8 py-4 border-b" style={{ borderColor: 'var(--hairline)' }}>
+        <Link href="/" className="label label-strong" style={{ textDecoration: 'none' }}>← dnthey</Link>
         <nav className="flex gap-1">
           {STEPS.map((s, i) => (
             <button
@@ -59,8 +59,8 @@ export function CreateClient() {
               data-active={step === s}
               style={{
                 padding: '0.35rem 0.8rem',
-                borderColor: step === s ? 'var(--gold)' : 'var(--ink-line)',
-                color: step === s ? 'var(--gold)' : 'var(--parchment-faint)',
+                borderColor: step === s ? 'var(--rubric)' : 'var(--hairline)',
+                color: step === s ? 'var(--rubric)' : 'var(--content-3)',
               }}
             >
               {i + 1}. {s}
@@ -68,7 +68,7 @@ export function CreateClient() {
           ))}
         </nav>
         <div className="flex items-center gap-4">
-          <span className="label-xs">{errors.length === 0 && ready ? 'playable' : `${errors.length} to resolve`}</span>
+          <span className="label">{errors.length === 0 && ready ? 'playable' : `${errors.length} to resolve`}</span>
           <ThemeToggle />
         </div>
       </header>
@@ -83,23 +83,19 @@ export function CreateClient() {
 
         <aside className="flex flex-col gap-4" style={{ position: 'sticky', top: '1.5rem', alignSelf: 'start' }}>
           {ready ? <Sheet build={build} /> : (
-            <div className="panel p-8 text-center">
-              <p className="prose-ink" style={{ color: 'var(--parchment-faint)' }}>
+            <div className="panel text-center" style={{ padding: '2rem' }}>
+              <p className="prose-ink" style={{ color: 'var(--content-3)' }}>
                 Your sheet fills in as you choose.
               </p>
             </div>
           )}
 
           {(errors.length > 0 || warnings.length > 0) && (
-            <div className="panel p-4">
-              <h3 className="label-xs mb-2">Validation</h3>
-              <ul style={{ fontSize: '0.8125rem', lineHeight: 1.6 }}>
-                {errors.map((i, n) => (
-                  <li key={`e${n}`} style={{ color: 'var(--blood-lit)' }}>• {i.message}</li>
-                ))}
-                {warnings.map((i, n) => (
-                  <li key={`w${n}`} style={{ color: 'var(--gold-dim)' }}>• {i.message}</li>
-                ))}
+            <div className="panel" style={{ padding: '1rem' }}>
+              <h3 className="label mb-2">Validation</h3>
+              <ul>
+                {errors.map((i, n) => <li key={`e${n}`} className="issue">{i.message}</li>)}
+                {warnings.map((i, n) => <li key={`w${n}`} className="issue issue-warn">{i.message}</li>)}
               </ul>
             </div>
           )}
@@ -123,15 +119,15 @@ function ClassStep({ build, patch, onNext }: StepProps) {
         {CLASSES.map((c) => (
           <button
             key={c.id}
-            className="card-select"
+            className="chip"
             data-selected={build.classId === c.id}
             onClick={() => patch({
               classId: c.id, classSkills: [], expertise: [], weaponMasteries: [],
               equippedWeaponIds: [], equippedArmorId: undefined, hasShield: false,
             })}
           >
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem' }}>{c.name}</div>
-            <div className="label-xs" style={{ textTransform: 'none', letterSpacing: 0 }}>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.15rem', lineHeight: 1.2 }}>{c.name}</div>
+            <div className="meta">
               d{c.hitDie} · {c.primary.map((p) => p.toUpperCase()).join('/')}
               {c.caster !== 'none' && ' · caster'}
             </div>
@@ -142,7 +138,7 @@ function ClassStep({ build, patch, onNext }: StepProps) {
       {cls && (
         <div className="panel p-4 mt-4">
           <h3 style={{ fontSize: '1.2rem' }}>{cls.name}</h3>
-          <p className="label-xs mt-1" style={{ textTransform: 'none', letterSpacing: 0 }}>
+          <p className="label mt-1" style={{ textTransform: 'none', letterSpacing: 0 }}>
             Saves: {cls.savingThrows.map((s) => ABILITY_NAMES[s]).join(' & ')} ·
             Armor: {cls.armor.join(', ') || 'none'} ·
             Subclass at level {cls.subclassLevel}: {cls.subclassName}
@@ -151,8 +147,8 @@ function ClassStep({ build, patch, onNext }: StepProps) {
           <ul style={{ fontSize: '0.8125rem', lineHeight: 1.65 }}>
             {cls.features.filter((f) => f.level === 1).map((f) => (
               <li key={f.name} className="mb-2">
-                <strong style={{ color: 'var(--gold)' }}>{f.name}.</strong>{' '}
-                <span style={{ color: 'var(--parchment-dim)' }}>{f.text}</span>
+                <strong>{f.name}.</strong>{' '}
+                <span style={{ color: 'var(--content-2)' }}>{f.text}</span>
               </li>
             ))}
           </ul>
@@ -184,7 +180,7 @@ function OriginStep({ build, patch, patchWith, onNext }: StepProps) {
         blurb="Background and species. In the 2024 rules your ability increases and your first feat come from your background — your species gives traits only."
       />
 
-      <h3 className="label-xs mb-2">Background</h3>
+      <h3 className="label mb-2">Background</h3>
       <div className="grid grid-cols-4 gap-2 mb-5">
         {BACKGROUNDS.map((b) => (
           <button
@@ -193,30 +189,30 @@ function OriginStep({ build, patch, patchWith, onNext }: StepProps) {
               backgroundId: b.id, backgroundIncrease: {}, originFeatId: b.originFeat, expertise: [],
             })}
           >
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.05rem' }}>{b.name}</div>
-            <div className="label-xs" style={{ textTransform: 'none', letterSpacing: 0 }}>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', lineHeight: 1.2 }}>{b.name}</div>
+            <div className="meta">
               {b.abilities.map((a) => a.toUpperCase()).join(' ')}
             </div>
           </button>
         ))}
       </div>
       {bg && (
-        <p className="prose-ink mb-5" style={{ fontSize: '0.875rem', color: 'var(--parchment-dim)' }}>
+        <p className="prose-ink mb-5" style={{ fontSize: '0.875rem', color: 'var(--content-2)' }}>
           {bg.description} Grants {SKILL_NAMES[bg.skills[0]]} and {SKILL_NAMES[bg.skills[1]]},
           proficiency with {bg.toolProficiency}, and the{' '}
-          <strong style={{ color: 'var(--gold)' }}>{FEATS_BY_ID[bg.originFeat]?.name}</strong> feat.
+          <strong>{FEATS_BY_ID[bg.originFeat]?.name}</strong> feat.
         </p>
       )}
 
-      <h3 className="label-xs mb-2">Species</h3>
+      <h3 className="label mb-2">Species</h3>
       <div className="grid grid-cols-3 gap-2 mb-3">
         {SPECIES.map((s) => (
           <button
             key={s.id} className="card-select" data-selected={build.speciesId === s.id}
             onClick={() => patch({ speciesId: s.id, speciesChoice: undefined })}
           >
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.05rem' }}>{s.name}</div>
-            <div className="label-xs" style={{ textTransform: 'none', letterSpacing: 0 }}>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', lineHeight: 1.2 }}>{s.name}</div>
+            <div className="meta">
               {typeof s.size === 'string' ? s.size : 'small/medium'} · {s.speed} ft
             </div>
           </button>
@@ -225,15 +221,15 @@ function OriginStep({ build, patch, patchWith, onNext }: StepProps) {
 
       {species?.choice && (
         <div className="panel p-4 mb-4">
-          <h3 className="label-xs mb-2">{species.choice.label}</h3>
+          <h3 className="label mb-2">{species.choice.label}</h3>
           <div className="grid grid-cols-2 gap-2">
             {species.choice.options.map((o) => (
               <button
                 key={o.id} className="card-select" data-selected={build.speciesChoice === o.id}
                 onClick={() => patch({ speciesChoice: o.id })}
               >
-                <div style={{ fontSize: '0.9rem', color: 'var(--parchment)' }}>{o.name}</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--parchment-faint)', marginTop: 2 }}>{o.text}</div>
+                <div style={{ fontSize: '0.9rem', color: 'var(--content-1)' }}>{o.name}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--content-3)', marginTop: 2 }}>{o.text}</div>
               </button>
             ))}
           </div>
@@ -242,12 +238,12 @@ function OriginStep({ build, patch, patchWith, onNext }: StepProps) {
 
       {species && (
         <div className="panel p-4 mb-5">
-          <h3 className="label-xs mb-2">{species.name} traits</h3>
+          <h3 className="label mb-2">{species.name} traits</h3>
           <ul style={{ fontSize: '0.8125rem', lineHeight: 1.6 }}>
             {species.traits.map((t) => (
               <li key={t.name} className="mb-1.5">
-                <strong style={{ color: 'var(--gold)' }}>{t.name}.</strong>{' '}
-                <span style={{ color: 'var(--parchment-dim)' }}>{t.text}</span>
+                <strong>{t.name}.</strong>{' '}
+                <span style={{ color: 'var(--content-2)' }}>{t.text}</span>
               </li>
             ))}
           </ul>
@@ -256,7 +252,7 @@ function OriginStep({ build, patch, patchWith, onNext }: StepProps) {
 
       {cls && (
         <>
-          <h3 className="label-xs mb-2">
+          <h3 className="label mb-2">
             Class skills — choose {cls.skillCount} ({build.classSkills.length} chosen)
           </h3>
           <div className="flex flex-wrap gap-1.5 mb-4">
@@ -265,9 +261,8 @@ function OriginStep({ build, patch, patchWith, onNext }: StepProps) {
               const fromBg = bg?.skills.includes(s);
               return (
                 <button
-                  key={s} className="card-select" data-selected={chosen}
+                  key={s} className="chip" data-selected={chosen}
                   onClick={() => toggleSkill(s)}
-                  style={{ padding: '0.35rem 0.7rem', fontSize: '0.8125rem', opacity: fromBg ? 0.5 : 1 }}
                   title={fromBg ? 'already granted by your background' : undefined}
                 >
                   {SKILL_NAMES[s]}{fromBg ? ' ·bg' : ''}
@@ -317,7 +312,7 @@ function AbilitiesStep({ build, patch, onNext }: StepProps) {
       <div className="flex gap-2 mb-4">
         {(['standard_array', 'point_buy', 'rolled'] as const).map((m) => (
           <button
-            key={m} className="card-select" data-selected={build.scoreMethod === m}
+            key={m} className="chip" data-selected={build.scoreMethod === m}
             onClick={() => {
               setRolled(null);
               patch({
@@ -325,7 +320,7 @@ function AbilitiesStep({ build, patch, onNext }: StepProps) {
                 baseScores: m === 'point_buy' ? emptyScores(8) : emptyScores(10),
               });
             }}
-            style={{ padding: '0.45rem 0.9rem', fontSize: '0.8125rem' }}
+            
           >
             {m === 'standard_array' ? 'Standard Array' : m === 'point_buy' ? 'Point Buy (27)' : 'Roll 4d6'}
           </button>
@@ -333,12 +328,12 @@ function AbilitiesStep({ build, patch, onNext }: StepProps) {
       </div>
 
       {build.scoreMethod === 'standard_array' && (
-        <p className="label-xs mb-3" style={{ textTransform: 'none', letterSpacing: 0 }}>
+        <p className="meta mb-3">
           Assign each of 15, 14, 13, 12, 10, 8 exactly once.
         </p>
       )}
       {build.scoreMethod === 'point_buy' && (
-        <p className="label-xs mb-3" style={{ textTransform: 'none', letterSpacing: 0, color: remaining === 0 ? 'var(--success)' : 'var(--gold)' }}>
+        <p className="meta mb-3" style={{ color: remaining === 0 ? 'var(--success)' : 'var(--rubric)' }}>
           {remaining ?? 0} of {POINT_BUY_BUDGET} points remaining. Scores run 8–15 before your background increase.
         </p>
       )}
@@ -354,7 +349,7 @@ function AbilitiesStep({ build, patch, onNext }: StepProps) {
             Roll 4d6 drop lowest ×6
           </button>
           {rolled && (
-            <span className="stat-num" style={{ color: 'var(--gold)' }}>
+            <span className="stat-num" style={{ color: 'var(--rubric)' }}>
               {[...rolled].sort((a, b) => b - a).join('  ')}
             </span>
           )}
@@ -375,7 +370,7 @@ function AbilitiesStep({ build, patch, onNext }: StepProps) {
                 </span>
                 <button className="btn" style={{ padding: '0.1rem 0.5rem' }}
                   onClick={() => setScore(a, Math.min(15, build.baseScores[a] + 1))}>+</button>
-                <span className="label-xs" style={{ width: '3.5rem' }}>
+                <span className="meta-quiet" style={{ width: '3.5rem' }}>
                   {POINT_BUY_COST[build.baseScores[a]] ?? '—'} pts
                 </span>
               </div>
@@ -391,10 +386,10 @@ function AbilitiesStep({ build, patch, onNext }: StepProps) {
               </select>
             )}
 
-            <span className="label-xs" style={{ marginLeft: 'auto' }}>
+            <span className="meta stat-num" style={{ marginLeft: 'auto' }}>
               {formatMod(Math.floor((build.baseScores[a] + (build.backgroundIncrease[a] ?? 0) - 10) / 2))}
               {build.backgroundIncrease[a] ? (
-                <span style={{ color: 'var(--gold)' }}> (+{build.backgroundIncrease[a]} bg)</span>
+                <span style={{ color: 'var(--content-2)' }}> (+{build.backgroundIncrease[a]} bg)</span>
               ) : null}
             </span>
           </div>
@@ -403,12 +398,12 @@ function AbilitiesStep({ build, patch, onNext }: StepProps) {
 
       {bg && (
         <div className="panel p-4 mb-5">
-          <h3 className="label-xs mb-1">{bg.name} ability increase</h3>
-          <p className="label-xs mb-3" style={{ textTransform: 'none', letterSpacing: 0 }}>
+          <h3 className="label mb-1">{bg.name} ability increase</h3>
+          <p className="meta mb-3">
             Spend 3 points among {bg.abilities.map((a) => ABILITY_NAMES[a]).join(', ')} — either +2/+1 or +1/+1/+1.
           </p>
           <div className="flex flex-wrap gap-2">
-            <button className="card-select" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8125rem' }}
+            <button className="chip"
               data-selected={Object.values(build.backgroundIncrease).filter((v) => v === 1).length === 3}
               onClick={() => setIncrease('1-1-1')}>
               +1 / +1 / +1
@@ -416,8 +411,7 @@ function AbilitiesStep({ build, patch, onNext }: StepProps) {
             {bg.abilities.map((first) =>
               bg.abilities.filter((s) => s !== first).map((second) => (
                 <button
-                  key={`${first}-${second}`} className="card-select"
-                  style={{ padding: '0.4rem 0.8rem', fontSize: '0.8125rem' }}
+                  key={`${first}-${second}`} className="chip"
                   data-selected={build.backgroundIncrease[first] === 2 && build.backgroundIncrease[second] === 1}
                   onClick={() => setIncrease('2-1', first, second)}
                 >
@@ -458,23 +452,23 @@ function DetailsStep({ build, patch, patchWith }: StepProps) {
 
       <div className="grid grid-cols-2 gap-3 mb-5">
         <div>
-          <label className="label-xs">Name</label>
+          <label className="label">Name</label>
           <input type="text" value={build.name} placeholder="Veyra Ashlock"
             onChange={(e) => patch({ name: e.target.value })} />
         </div>
         <div>
-          <label className="label-xs">Pronouns</label>
+          <label className="label">Pronouns</label>
           <input type="text" value={build.pronouns}
             onChange={(e) => patch({ pronouns: e.target.value })} />
         </div>
       </div>
 
-      <h3 className="label-xs mb-2">Origin feat</h3>
+      <h3 className="label mb-2">Origin feat</h3>
       <div className="flex flex-wrap gap-1.5 mb-5">
         {ORIGIN_FEATS.map((f) => (
-          <button key={f.id} className="card-select" data-selected={build.originFeatId === f.id}
+          <button key={f.id} className="chip" data-selected={build.originFeatId === f.id}
             onClick={() => patch({ originFeatId: f.id })}
-            style={{ padding: '0.35rem 0.7rem', fontSize: '0.8125rem' }} title={f.text}>
+             title={f.text}>
             {f.name}
           </button>
         ))}
@@ -482,17 +476,17 @@ function DetailsStep({ build, patch, patchWith }: StepProps) {
 
       {masteryCount > 0 && (
         <>
-          <h3 className="label-xs mb-1">
+          <h3 className="label mb-1">
             Weapon mastery — choose {masteryCount} ({build.weaponMasteries.length} chosen)
           </h3>
-          <p className="label-xs mb-2" style={{ textTransform: 'none', letterSpacing: 0 }}>
+          <p className="meta mb-2">
             New in the 2024 rules: each weapon has a mastery property your class can unlock.
           </p>
           <div className="flex flex-wrap gap-1.5 mb-5">
             {MASTERIES.map((m) => (
-              <button key={m} className="card-select" data-selected={build.weaponMasteries.includes(m)}
+              <button key={m} className="chip" data-selected={build.weaponMasteries.includes(m)}
                 onClick={() => toggleMastery(m)} title={MASTERY_TEXT[m]}
-                style={{ padding: '0.35rem 0.7rem', fontSize: '0.8125rem', textTransform: 'capitalize' }}>
+                style={{ textTransform: 'capitalize' }}>
                 {m}
               </button>
             ))}
@@ -500,7 +494,7 @@ function DetailsStep({ build, patch, patchWith }: StepProps) {
         </>
       )}
 
-      <h3 className="label-xs mb-2">Equipped weapons</h3>
+      <h3 className="label mb-2">Equipped weapons</h3>
       <div className="flex flex-wrap gap-1.5 mb-5">
         {WEAPONS.filter((w) =>
           cls?.weapons.some((cw) =>
@@ -509,9 +503,8 @@ function DetailsStep({ build, patch, patchWith }: StepProps) {
             cw.startsWith('Martial weapons with'),
           ),
         ).map((w) => (
-          <button key={w.id} className="card-select" data-selected={build.equippedWeaponIds.includes(w.id)}
+          <button key={w.id} className="chip" data-selected={build.equippedWeaponIds.includes(w.id)}
             onClick={() => toggleWeapon(w.id)}
-            style={{ padding: '0.35rem 0.7rem', fontSize: '0.8125rem' }}
             title={`${w.damage} ${w.damageType} · mastery: ${w.mastery}`}>
             {w.name}
           </button>
@@ -520,12 +513,12 @@ function DetailsStep({ build, patch, patchWith }: StepProps) {
 
       <div className="grid grid-cols-2 gap-3 mb-5">
         <div>
-          <label className="label-xs">Appearance</label>
+          <label className="label">Appearance</label>
           <textarea rows={3} value={build.appearance} placeholder="One line a stranger would notice first."
             onChange={(e) => patch({ appearance: e.target.value })} />
         </div>
         <div>
-          <label className="label-xs">Flaw — the DM will use this</label>
+          <label className="label">Flaw — the DM will use this</label>
           <textarea rows={3} value={build.personality.flaw}
             placeholder="The way they reliably make things worse."
             onChange={(e) => patch({ personality: { ...build.personality, flaw: e.target.value } })} />
@@ -549,9 +542,9 @@ interface StepProps {
 function StepHeader({ n, title, blurb }: { n: number; title: string; blurb: string }) {
   return (
     <div className="mb-5">
-      <span className="label-xs">Step {n} of 4</span>
-      <h2 style={{ fontSize: '1.9rem', marginTop: 2 }}>{title}</h2>
-      <p className="prose-ink" style={{ color: 'var(--parchment-dim)', fontSize: '0.9375rem', marginTop: 4, maxWidth: '44rem' }}>
+      <span className="label">Step {n} of 4</span>
+      <h2 style={{ fontSize: '1.75rem', marginTop: '0.25rem' }}>{title}</h2>
+      <p className="prose-ink" style={{ color: 'var(--content-2)', fontSize: '0.9375rem', marginTop: '0.4rem', maxWidth: '46rem' }}>
         {blurb}
       </p>
     </div>

@@ -1,262 +1,367 @@
 @import "tailwindcss";
 
+/* ============================================================================
+   dnthey design system
+
+   Thesis: this is a MANUSCRIPT, not a fantasy game skin. Medieval scribes used
+   rubrication — red ink for headings, initials and instructions — while gold
+   leaf was reserved for illumination and spent rarely. That hierarchy is the
+   rule here, and it is what keeps the interface from reading as generic:
+
+     RUBRIC RED  = the working accent. Headings, active state, primary action.
+     GOLD        = precious only. Critical success, legendary loot, the d20.
+                   If gold is everywhere it means nothing; it was wallpaper
+                   before, which is exactly why it read as cheap.
+
+   Type: IM Fell English (Oxford, 1600s) and Libre Caslon carry the voice —
+   display, prose and numerals. Functional micro-text uses the system face,
+   because a historical small-caps serif at 12px is not legible, and Apple's
+   typography guidance is explicit that controls want system type while brand
+   lives in display text and content.
+
+   Every colour pair below is measured against its own surface. Minimum 4.5:1
+   for text up to 17px, per accessibility.md › Color contrast.
+   ========================================================================= */
+
 @theme {
-  /* IM Fell (Oxford, 1600s) for display, Libre Caslon for reading, Yinit for drop caps.
-     Loaded and self-hosted by next/font in layout.tsx. */
   --font-display: var(--f-display), "Iowan Old Style", Georgia, serif;
   --font-fell:    var(--f-fell), "Iowan Old Style", Georgia, serif;
   --font-prose:   var(--f-prose), "Iowan Old Style", Georgia, serif;
-  --font-ui:      var(--f-fell), "Iowan Old Style", Georgia, serif;
   --font-initial: var(--f-initial), var(--f-display), Georgia, serif;
-  --font-mono:    ui-monospace, "SF Mono", Menlo, monospace;
+  /* Functional UI text. Legibility beats period flavour at 13px. */
+  --font-ui: ui-sans-serif, -apple-system, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
 }
 
 :root {
-  /* ---- DARK is the design's home key: candlelight on ink. Defined first so a
-     dark-preferring viewer never sees a light flash. ---- */
-  --ink-void:    #0b0b0e;
-  --ink-black:   #121216;
-  --ink-panel:   #17171c;
-  --ink-raised:  #1e1e25;
-  --ink-line:    #2b2b34;
-  --ink-line-lit:#3d3d49;
+  /* ---- DARK: ink and candlelight. Defined first so dark never flashes. ---- */
+  --surface:        #101113;
+  --panel:          #17191C;
+  --raised:         #1F2227;
+  --hairline:       #282C31;
+  --hairline-lit:   #383D44;
 
-  --parchment:   #e8e0cd;
-  --parchment-dim: #b9b2a2;
-  --parchment-faint: #6f6a5f;
+  --content-1:      #EDE8DC;   /* 14.4:1 on panel — body, headings            */
+  --content-2:      #B6B0A3;   /*  8.2:1 on panel — secondary                 */
+  --content-3:      #938C7E;   /*  5.3:1 on panel — meta. The floor.          */
 
-  --gold:        #c8a24a;
-  --gold-dim:    #8a6f33;
-  --copper:      #a4643a;
-  --blood:       #8c2f2f;
-  --blood-lit:   #c04a4a;
-  --verdigris:   #4a8a7b;
+  --rubric:         #E06B52;   /*  5.4:1 on panel — the working accent        */
+  --rubric-solid:   #B8402B;   /*  fill for primary actions                   */
+  --on-rubric:      #EDE8DC;   /*  4.5:1 on rubric-solid                      */
+  --gold:           #D9B063;   /*  8.7:1 — PRECIOUS ONLY                      */
 
-  --success:     #6f9f5e;
-  --failure:     #a8484a;
+  --verdigris:      #5FA891;
+  --success:        #7FB069;
+  /* Problem text is NOT a second red: rubric already means "the scribe marked
+     this". Warnings carry a glyph plus readable content-1 text, and amber is
+     reserved for the state itself. One colour, one meaning (color.md). */
+  --warning:        #D8A657;
 
-  --grain-opacity: 0.022;
-  --glow:        rgba(200,162,74,0.07);
-  --art-dim:     0.38;
-  /* Scrim over backdrop art. Must be a token: a hardcoded dark rgba stays dark in
-     light mode and buries the text. */
-  --scrim-rgb:   11, 11, 14;
+  --grain-opacity:  0.02;
+  --art-dim:        0.30;
+  --scrim-rgb:      16, 17, 19;
+  --shadow:         0 1px 2px rgba(0,0,0,0.5), 0 8px 24px -12px rgba(0,0,0,0.7);
   color-scheme: dark;
 }
 
-/*
-  LIGHT: not an inversion. The dark theme is ink on a dark room; the light theme is
-  ink on aged paper. The same manuscript, lit differently. Roles stay identical so
-  every component keeps working without theme-specific CSS.
-*/
+/* LIGHT is not an inversion: it is the same ink on actual paper. */
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
-    --ink-void:    #e4dcc6;
-    --ink-black:   #ece5d2;
-    --ink-panel:   #f2ecdc;
-    --ink-raised:  #e8e0cb;
-    --ink-line:    #cfc4a6;
-    --ink-line-lit:#b3a582;
+    --surface:      #E8E1CF;
+    --panel:        #F1EBDA;
+    --raised:       #DED6C1;
+    --hairline:     #CEC5AC;
+    --hairline-lit: #B2A88B;
 
-    --parchment:   #231d14;
-    --parchment-dim: #4e4333;
-    --parchment-faint: #8a7c62;
+    --content-1:    #1C1813;   /* 14.8:1 on panel */
+    --content-2:    #4A4336;   /*  8.2:1 on panel */
+    --content-3:    #5F5747;   /*  4.9:1 on raised, 6.0:1 on panel */
 
-    --gold:        #8a6512;
-    --gold-dim:    #ab8a3c;
-    --copper:      #8a4a24;
-    --blood:       #8c2f2f;
-    --blood-lit:   #9c2626;
-    --verdigris:   #2f6b5c;
+    --rubric:       #9E2B16;   /*  6.3:1 on panel */
+    --rubric-solid: #9E2B16;
+    --on-rubric:    #FFFFFF;
+    --gold:         #6E5110;   /*  5.1:1 on raised — precious only */
 
-    --success:     #41662f;
-    --failure:     #96292b;
+    --verdigris:    #1F5F4C;
+    --success:      #355E24;
+    --warning:      #7A5410;
 
-    --grain-opacity: 0.05;
-    --glow:        rgba(138,101,18,0.10);
-    /* The backdrop art is painted dark; on paper it works as a faint watermark. */
-    --art-dim:     0.10;
-    --scrim-rgb:   228, 220, 198;
+    --grain-opacity: 0.045;
+    --art-dim:      0.09;
+    --scrim-rgb:    232, 225, 207;
+    --shadow:       0 1px 2px rgba(60,48,28,0.10), 0 8px 24px -14px rgba(60,48,28,0.22);
     color-scheme: light;
   }
 }
 
 :root[data-theme="light"] {
-  --ink-void:    #e4dcc6;
-  --ink-black:   #ece5d2;
-  --ink-panel:   #f2ecdc;
-  --ink-raised:  #e8e0cb;
-  --ink-line:    #cfc4a6;
-  --ink-line-lit:#b3a582;
+  --surface:      #E8E1CF;
+  --panel:        #F1EBDA;
+  --raised:       #DED6C1;
+  --hairline:     #CEC5AC;
+  --hairline-lit: #B2A88B;
 
-  --parchment:   #231d14;
-  --parchment-dim: #4e4333;
-  --parchment-faint: #8a7c62;
+  --content-1:    #1C1813;
+  --content-2:    #4A4336;
+  --content-3:    #5F5747;   /*  4.9:1 on raised, 6.0:1 on panel */
 
-  --gold:        #8a6512;
-  --gold-dim:    #ab8a3c;
-  --copper:      #8a4a24;
-  --blood:       #8c2f2f;
-  --blood-lit:   #9c2626;
-  --verdigris:   #2f6b5c;
+  --rubric:       #9E2B16;
+  --rubric-solid: #9E2B16;
+  --on-rubric:    #FFFFFF;
+  --gold:         #6E5110;   /*  5.1:1 on raised — precious only */
 
-  --success:     #41662f;
-  --failure:     #96292b;
+  --verdigris:    #1F5F4C;
+  --success:      #355E24;
+  --warning:      #7A5410;
 
-  --grain-opacity: 0.05;
-  --glow:        rgba(138,101,18,0.10);
-  --art-dim:     0.10;
-  --scrim-rgb:   228, 220, 198;
+  --grain-opacity: 0.045;
+  --art-dim:      0.09;
+  --scrim-rgb:    232, 225, 207;
+  --shadow:       0 1px 2px rgba(60,48,28,0.10), 0 8px 24px -14px rgba(60,48,28,0.22);
   color-scheme: light;
 }
 
 * { box-sizing: border-box; }
 
 html, body {
-  background: var(--ink-void);
-  color: var(--parchment);
+  background: var(--surface);
+  color: var(--content-1);
   font-family: var(--font-ui);
+  font-size: 15px;
+  line-height: 1.5;
   margin: 0;
   min-height: 100%;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 body {
-  /* faint paper tooth so flat panels don't read as plastic */
   background-image:
-    radial-gradient(ellipse 80% 50% at 50% -10%, var(--glow), transparent 70%),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.022'/%3E%3C/svg%3E");
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-blend-mode: overlay;
 }
+
+/* ---------------------------------------------------------------- type ---- */
 
 h1, h2, h3, .display {
   font-family: var(--font-display);
   font-weight: 400;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.015em;
+  color: var(--content-1);
+  margin: 0;
 }
-.prose-ink { font-family: var(--font-prose); line-height: 1.7; color: var(--parchment); }
+h1 { font-size: clamp(2rem, 4vw, 2.75rem); line-height: 1.08; }
+h2 { font-size: 1.625rem; line-height: 1.15; }
+h3 { font-size: 1.125rem; line-height: 1.25; }
 
-/* Illuminated capital for the opening of a narration beat. */
+.prose-ink {
+  font-family: var(--font-prose);
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--content-1);
+}
+
+/* Small-caps section label. 13px system face — the old 12px IM Fell SC at
+   3.3:1 was the single worst readability failure in the app. */
+.label {
+  font-family: var(--font-ui);
+  font-size: 0.8125rem;
+  font-weight: 550;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+  color: var(--content-3);
+  line-height: 1.3;
+}
+.label-strong { color: var(--content-2); }
+
+/* Functional secondary text: never below 13px, never below 4.5:1. */
+.meta { font-size: 0.8125rem; line-height: 1.45; color: var(--content-2); }
+.meta-quiet { font-size: 0.8125rem; line-height: 1.45; color: var(--content-3); }
+
+/* Numerals use the UI face, NOT IM Fell.
+   IM Fell ships old-style (text) figures with no lining set, so "10" renders as
+   "IO" and "11" as "II". For armour class and hit points — the numbers a player
+   reads fastest and trusts most — that is a misread, not a flourish. Period
+   voice stays in headings and prose where it costs nothing. */
+.stat-num {
+  font-family: var(--font-ui);
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "lnum" 1, "tnum" 1;
+  letter-spacing: 0;
+  font-weight: 500;
+}
+
+/* Illuminated capital, for the opening of a narration beat. */
 .dropcap::first-letter {
   font-family: var(--font-initial);
-  font-size: 3.4em;
-  line-height: 0.82;
+  font-size: 3.2em;
+  line-height: 0.84;
   float: left;
-  margin: 0.06em 0.09em 0 0;
-  color: var(--gold);
+  margin: 0.06em 0.1em 0 0;
+  color: var(--rubric);
 }
 
-/* IM Fell has no bold cut; emphasise with colour and letterspacing instead. */
-strong { font-weight: 400; color: var(--gold); }
+/* IM Fell has no bold cut. Emphasis is carried by BRIGHTNESS, not hue: running
+   prose sets in content-2 and the emphasised run lifts to content-1. Using the
+   rubric here put five red words in every paragraph, which is exactly the
+   "accent everywhere" failure the gold had. */
+strong { font-weight: 400; color: var(--content-1); }
+
+/* -------------------------------------------------------------- surface --- */
 
 .panel {
-  background: linear-gradient(180deg, var(--ink-panel), var(--ink-black));
-  border: 1px solid var(--ink-line);
-  border-radius: 6px;
+  background: var(--panel);
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
 }
-.panel-raised { background: var(--ink-raised); border: 1px solid var(--ink-line); border-radius: 6px; }
+.panel-raised {
+  background: var(--raised);
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+}
+.rule { height: 1px; background: var(--hairline); border: 0; }
 
-.rule-gold {
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--gold-dim) 15%, var(--gold) 50%, var(--gold-dim) 85%, transparent);
-  opacity: 0.6;
-}
+/* -------------------------------------------------------------- controls -- */
 
 .btn {
-  font-family: var(--font-display);
+  font-family: var(--font-ui);
   font-size: 0.875rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 0.6rem 1.1rem;
-  border-radius: 4px;
-  border: 1px solid var(--ink-line-lit);
-  background: var(--ink-raised);
-  color: var(--parchment-dim);
+  font-weight: 550;
+  letter-spacing: 0.01em;
+  padding: 0.5rem 0.95rem;
+  min-height: 34px;              /* desktop control minimum is 28px */
+  border-radius: 7px;
+  border: 1px solid var(--hairline-lit);
+  background: var(--raised);
+  color: var(--content-1);
   cursor: pointer;
-  transition: border-color 140ms, color 140ms, background 140ms, transform 80ms;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
 }
-.btn:hover:not(:disabled) { color: var(--parchment); border-color: var(--gold-dim); background: var(--ink-line); }
-.btn:active:not(:disabled) { transform: translateY(1px); }
-.btn:disabled { opacity: 0.38; cursor: not-allowed; }
+.btn:hover:not(:disabled) { border-color: var(--hairline-lit); background: var(--hairline); }
+.btn:active:not(:disabled) { transform: translateY(0.5px); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .btn-primary {
-  background: color-mix(in srgb, var(--gold) 12%, var(--ink-raised));
-  border-color: var(--gold-dim);
-  color: var(--gold);
+  background: var(--rubric-solid);
+  border-color: var(--rubric-solid);
+  color: var(--on-rubric);
 }
 .btn-primary:hover:not(:disabled) {
-  border-color: var(--gold);
-  background: color-mix(in srgb, var(--gold) 22%, var(--ink-raised));
+  background: color-mix(in srgb, var(--rubric-solid) 86%, white);
+  border-color: color-mix(in srgb, var(--rubric-solid) 86%, white);
 }
 
+.btn-quiet { background: transparent; border-color: transparent; color: var(--content-2); }
+.btn-quiet:hover:not(:disabled) { background: var(--raised); color: var(--content-1); }
+
+/* Visible keyboard focus everywhere — desktop quality floor. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--rubric);
+  outline-offset: 2px;
+  border-radius: 5px;
+}
+
+/* Selectable option card. */
 .card-select {
-  background: var(--ink-panel);
-  border: 1px solid var(--ink-line);
-  border-radius: 6px;
-  padding: 0.85rem 1rem;
+  background: var(--panel);
+  border: 1px solid var(--hairline);
+  border-radius: 9px;
+  padding: 0.7rem 0.85rem;
   cursor: pointer;
   text-align: left;
-  transition: border-color 140ms, background 140ms;
+  color: var(--content-1);
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+  transition: border-color 120ms ease, background 120ms ease;
 }
-.card-select:hover { border-color: var(--ink-line-lit); background: var(--ink-raised); }
+.card-select:hover { border-color: var(--hairline-lit); background: var(--raised); }
 .card-select[data-selected="true"] {
-  border-color: var(--gold);
-  background: linear-gradient(180deg, rgba(200,162,74,0.1), rgba(200,162,74,0.03));
+  border-color: var(--rubric);
+  background: color-mix(in srgb, var(--rubric) 9%, var(--panel));
+}
+/* Selection is never carried by colour alone (accessibility.md › Inclusive color). */
+.card-select[data-selected="true"]::after {
+  content: '✓';
+  float: right;
+  color: var(--rubric);
+  font-weight: 700;
+  margin-left: 0.5rem;
 }
 
-.label-xs {
-  font-family: var(--font-display);
-  font-size: 0.75rem; letter-spacing: 0.16em; text-transform: uppercase;
-  color: var(--parchment-faint);
+.chip {
+  font-family: var(--font-ui);
+  font-size: 0.8125rem;
+  padding: 0.3rem 0.6rem;
+  min-height: 30px;
+  border-radius: 7px;
+  border: 1px solid var(--hairline);
+  background: var(--panel);
+  color: var(--content-2);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
 }
-
-.stat-num { font-family: var(--font-fell); font-variant-numeric: tabular-nums; letter-spacing: 0.01em; }
+.chip:hover { border-color: var(--hairline-lit); color: var(--content-1); }
+.chip[data-selected="true"] {
+  border-color: var(--rubric);
+  background: color-mix(in srgb, var(--rubric) 10%, var(--panel));
+  color: var(--content-1);
+}
+.chip[data-selected="true"]::before { content: '✓'; margin-right: 0.35rem; color: var(--rubric); }
 
 input[type="text"], textarea, select {
-  background: var(--ink-black);
-  border: 1px solid var(--ink-line);
-  border-radius: 4px;
-  color: var(--parchment);
-  padding: 0.5rem 0.7rem;
-  font-family: inherit;
-  font-size: 0.9rem;
+  background: var(--surface);
+  border: 1px solid var(--hairline-lit);
+  border-radius: 7px;
+  color: var(--content-1);
+  padding: 0.5rem 0.65rem;
+  min-height: 34px;
+  font-family: var(--font-ui);
+  font-size: 0.9375rem;
   width: 100%;
 }
 input[type="text"]:focus, textarea:focus, select:focus {
-  outline: none; border-color: var(--gold-dim);
+  outline: none;
+  border-color: var(--rubric);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--rubric) 22%, transparent);
 }
-::placeholder { color: var(--parchment-faint); }
+::placeholder { color: var(--content-3); opacity: 1; }
+
+/* ---- Loot rarity. CSS, not generated art: a raster frame cannot wrap
+   variable-height content without 9-slicing and does not re-colour by theme. */
+.rarity { border: 1px solid var(--rarity-ink); border-radius: 8px; background: var(--panel); position: relative; }
+.rarity-label { color: var(--rarity-ink); }
+.rarity[data-rarity="common"]    { --rarity-ink: var(--content-3); }
+.rarity[data-rarity="uncommon"]  { --rarity-ink: var(--verdigris); }
+.rarity[data-rarity="rare"]      { --rarity-ink: #6E9BC9; }
+.rarity[data-rarity="very-rare"] { --rarity-ink: #A579C9; }
+.rarity[data-rarity="legendary"] { --rarity-ink: var(--gold); }
+.rarity[data-rarity="artifact"]  { --rarity-ink: var(--rubric); }
+
+/* Problem list: the mark is red, the words stay readable. */
+.issue { display: flex; gap: 0.5rem; font-size: 0.8125rem; line-height: 1.5; padding: 0.15rem 0; color: var(--content-1); }
+.issue::before { content: '✱'; color: var(--rubric); flex: none; line-height: 1.5; }
+.issue-warn { color: var(--content-2); }
+.issue-warn::before { content: '△'; color: var(--warning); }
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .rarity[data-rarity="rare"]      { --rarity-ink: #2A5D91; }
+  :root:not([data-theme="dark"]) .rarity[data-rarity="very-rare"] { --rarity-ink: #6B3E91; }
+}
+:root[data-theme="light"] .rarity[data-rarity="rare"]      { --rarity-ink: #2A5D91; }
+:root[data-theme="light"] .rarity[data-rarity="very-rare"] { --rarity-ink: #6B3E91; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
 
-/*
-  Loot rarity treatments. Deliberately CSS, not generated art: a raster frame
-  cannot wrap variable-height card content without 9-slicing, does not re-colour
-  for the light theme, and costs bytes. These scale to any size and theme for free.
-*/
-.rarity { border: 1px solid var(--rarity-ink); border-radius: 5px; position: relative; background: var(--ink-panel); }
-.rarity::before {
-  content: ''; position: absolute; inset: 3px; border-radius: 3px; pointer-events: none;
-  border: 1px solid color-mix(in srgb, var(--rarity-ink) 35%, transparent);
-}
-.rarity-label { color: var(--rarity-ink); }
-
-.rarity[data-rarity="common"]    { --rarity-ink: var(--parchment-faint); }
-.rarity[data-rarity="uncommon"]  { --rarity-ink: var(--verdigris); }
-.rarity[data-rarity="rare"]      { --rarity-ink: #4a7aa8; }
-.rarity[data-rarity="very-rare"] { --rarity-ink: #8a5ca8; }
-.rarity[data-rarity="legendary"] { --rarity-ink: var(--gold); }
-.rarity[data-rarity="artifact"]  { --rarity-ink: var(--blood-lit); }
-
-/* The top two tiers earn corner flourishes; the rest stay quiet. */
-.rarity[data-rarity="legendary"]::after,
-.rarity[data-rarity="artifact"]::after {
-  content: ''; position: absolute; inset: -1px; border-radius: 5px; pointer-events: none;
-  background:
-    linear-gradient(135deg, var(--rarity-ink) 0 10px, transparent 10px) top left / 14px 14px no-repeat,
-    linear-gradient(225deg, var(--rarity-ink) 0 10px, transparent 10px) top right / 14px 14px no-repeat,
-    linear-gradient(45deg,  var(--rarity-ink) 0 10px, transparent 10px) bottom left / 14px 14px no-repeat,
-    linear-gradient(315deg, var(--rarity-ink) 0 10px, transparent 10px) bottom right / 14px 14px no-repeat;
-  opacity: 0.55;
+/* Screen-reader-only text, for state carried visually by a glyph. */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
 }

@@ -35,11 +35,11 @@ export function ModelStatus({ compact = false }: { compact?: boolean }) {
   };
 
   const dot: Record<Availability | 'checking', string> = {
-    checking: 'var(--parchment-faint)',
+    checking: 'var(--content-3)',
     available: 'var(--success)',
-    downloadable: 'var(--gold)',
-    downloading: 'var(--gold)',
-    unavailable: 'var(--failure)',
+    downloadable: 'var(--rubric)',
+    downloading: 'var(--rubric)',
+    unavailable: 'var(--warning)',
   };
 
   return (
@@ -53,9 +53,7 @@ export function ModelStatus({ compact = false }: { compact?: boolean }) {
             ? 'pulse 1.6s ease-in-out infinite' : undefined,
         }}
       />
-      <span className="label-xs" style={{ letterSpacing: '0.1em' }}>
-        {compact ? state.status : label[state.status]}
-      </span>
+      <span className="label">{compact ? state.status : label[state.status]}</span>
       <style>{`@keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: 0.35 } }`}</style>
     </div>
   );
