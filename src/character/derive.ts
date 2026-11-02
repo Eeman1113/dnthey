@@ -1,5 +1,5 @@
 /**
- * Everything computed from a CharacterBuild. Pure — no randomness, no state.
+ * Everything computed from a CharacterBuild. Pure, no randomness, no state.
  * The UI sheet and the engine both read from this, so there is exactly one
  * definition of "what is this character's AC".
  */

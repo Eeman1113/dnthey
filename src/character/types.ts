@@ -44,7 +44,7 @@ export interface CharacterBuild {
   portraitAssetId?: string;
 }
 
-/** Live, mutable state during play. Never derived — this is what the engine mutates. */
+/** Live, mutable state during play. Never derived, this is what the engine mutates. */
 export interface CharacterState {
   currentHp: number;
   tempHp: number;

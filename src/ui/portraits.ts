@@ -1,13 +1,13 @@
 /**
  * Portrait selection. There is no image model on-device, so a companion the DM
- * invents at runtime cannot be painted — it is MATCHED against a pre-generated,
+ * invents at runtime cannot be painted, it is MATCHED against a pre-generated,
  * tagged library (BUILD_PROMPT.md §9.5).
  */
 
 export interface PortraitEntry {
   id: string;
   species: string;
-  /** Broad visual archetype, not the exact class — a paladin can wear a fighter. */
+  /** Broad visual archetype, not the exact class, a paladin can wear a fighter. */
   archetype: 'martial' | 'arcane' | 'divine' | 'roguish' | 'bardic' | 'primal';
   mood: string;
   tags: string[];

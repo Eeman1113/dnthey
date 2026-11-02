@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 export type ThemePref = 'light' | 'dark' | 'system';
 const KEY = 'dnthey.theme';
 
-/** Applied by the inline script in layout.tsx too — keep the two in agreement. */
+/** Applied by the inline script in layout.tsx too, keep the two in agreement. */
 export function applyTheme(pref: ThemePref) {
   const root = document.documentElement;
   if (pref === 'system') root.removeAttribute('data-theme');

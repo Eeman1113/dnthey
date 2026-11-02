@@ -167,7 +167,7 @@ export function Sheet({ build }: { build: CharacterBuild }) {
                       </span>
                     )}
                     {!a.proficient && (
-                      <span title="Not proficient — no proficiency bonus on this attack">
+                      <span title="Not proficient, so no proficiency bonus on this attack">
                         <span aria-hidden style={{ color: 'var(--warning)', marginLeft: '0.3rem' }}>△</span>
                         <span className="sr-only"> (not proficient)</span>
                       </span>
@@ -186,7 +186,7 @@ export function Sheet({ build }: { build: CharacterBuild }) {
             <Group title="Spellcasting">
               <Row k="Save DC" v={d.spellSaveDc} />
               <Row k="Attack" v={formatMod(d.spellAttackBonus ?? 0)} />
-              <Row k="Slots" v={d.spellSlots.length ? d.spellSlots.map((n, i) => `${i + 1}:${n}`).join('  ') : '—'} />
+              <Row k="Slots" v={d.spellSlots.length ? d.spellSlots.map((n, i) => `${i + 1}:${n}`).join('  ') : 'none'} />
             </Group>
           )}
 

@@ -14,7 +14,7 @@ export interface DiceRoll {
   modifiers: Modifier[];
   total: number;
   reason: string;
-  /** PRNG state before the roll — lets the UI replay this exact roll */
+  /** PRNG state before the roll, lets the UI replay this exact roll */
   seedState: number;
 }
 
@@ -79,7 +79,7 @@ export function rollDamage(
   };
 }
 
-/** 4d6-drop-lowest, six times — one of the three legal 2024 score methods. */
+/** 4d6-drop-lowest, six times, one of the three legal 2024 score methods. */
 export function rollAbilityScores(rng: Rng): { score: number; roll: DiceRoll }[] {
   return Array.from({ length: 6 }, (_, i) => {
     const seedState = rng.getState();

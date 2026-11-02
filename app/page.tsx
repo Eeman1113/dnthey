@@ -28,8 +28,8 @@ export default function TitlePage() {
         />
       </div>
 
-      {/* One row on desktop. On a phone the model-status line — which can read
-          "Dungeon Master must be summoned" — wraps to its own row rather than
+      {/* One row on desktop. On a phone the model-status line, which can read
+          "Dungeon Master must be summoned", wraps to its own row rather than
           squeezing the brand and the theme control. */}
       <header className="title-bar gutter">
         <span className="label label-strong title-bar__brand">dnthey</span>
@@ -59,7 +59,7 @@ export default function TitlePage() {
         <p className="prose-ink" style={{ maxWidth: '38rem', color: 'var(--content-2)', fontSize: '1.0625rem' }}>
           A full Dungeons &amp; Dragons campaign for one person. The Dungeon Master
           invents the world, calls for the rolls, and runs the monsters. Your party
-          are players too — they argue, they improvise, and they can die.
+          are players too. They argue, they improvise, and they can die.
         </p>
 
         <div className="cta-row mt-9">

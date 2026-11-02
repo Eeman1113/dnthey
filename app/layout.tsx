@@ -6,7 +6,7 @@ import { HintLayer } from '@/ui/components/HintLayer';
 
 /**
  * Typography: 17th-century types. IM Fell was cut for the Oxford University Press
- * in the 1600s — it carries the ink-bleed and irregularity of letterpress, which is
+ * in the 1600s, it carries the ink-bleed and irregularity of letterpress, which is
  * exactly the register this game wants. Self-hosted at build time by next/font.
  */
 const fellSC = IM_Fell_English_SC({
@@ -19,7 +19,7 @@ const caslon = Libre_Caslon_Text({
   weight: ['400', '700'], style: ['normal', 'italic'], subsets: ['latin'], display: 'swap', variable: '--f-prose',
 });
 
-/** Yinit: public-domain illuminated capitals, subset to A–Z for drop caps. */
+/** Yinit: public-domain illuminated capitals, subset to A-Z for drop caps. */
 const yinit = localFont({
   src: '../public/fonts/yinit-caps.woff2',
   display: 'swap',
@@ -28,11 +28,11 @@ const yinit = localFont({
 });
 
 export const metadata: Metadata = {
-  title: 'dnthey — a dungeon that runs itself',
+  title: 'dnthey: a dungeon that runs itself',
   description:
     'A solo Dungeons & Dragons campaign with an AI Dungeon Master and a party of AI players, running entirely on-device in your browser.',
   openGraph: {
-    title: 'dnthey — a dungeon that runs itself',
+    title: 'dnthey: a dungeon that runs itself',
     description: 'A full D&D campaign for one person, with an AI Dungeon Master and a party of AI players.',
     images: ['/assets/brand/og.webp'],
   },
@@ -42,7 +42,7 @@ export const viewport = {
   // `cover` is what makes env(safe-area-inset-*) report real numbers, so the
   // bottom dock and the page gutters can clear the home indicator and the
   // rounded corners (layout.md › Guides and safe areas). Zoom is deliberately
-  // left unrestricted — no maximumScale, no userScalable.
+  // left unrestricted, no maximumScale, no userScalable.
   viewportFit: 'cover' as const,
   // Tells the browser chrome (address bar, scrollbars) which theme is active.
   themeColor: [

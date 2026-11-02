@@ -1,6 +1,6 @@
 /**
  * The 9 species of SRD 5.2.1 (CC BY 4.0, Wizards of the Coast).
- * 2024 rules: species grant traits ONLY — no ability score bonuses (those come from
+ * 2024 rules: species grant traits ONLY, no ability score bonuses (those come from
  * background) and no languages (chosen separately).
  */
 import type { Size } from '@/engine/types';

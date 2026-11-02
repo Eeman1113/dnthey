@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 /**
  * Touch affordance for the `[data-hint]` jargon help.
  *
- * The hints are CSS `:hover` tooltips, which is correct on a pointer — Apple
+ * The hints are CSS `:hover` tooltips, which is correct on a pointer, Apple
  * documents tooltips as exactly that (offering-help.md › Desktop: "tooltips can
  * appear when a person holds the pointer over an element"). A phone has no
  * hover, so the same text needs a tap affordance, and the jargon it explains
@@ -21,7 +21,7 @@ import { useEffect, useRef, useState } from 'react';
  *  - Only touch and pen taps are intercepted. A mouse keeps the hover tooltip
  *    and keeps selecting cards on click, so desktop behaviour is untouched.
  *  - The popover is dismissed by an explicit action (tapping it, tapping
- *    elsewhere, Escape) and never on a timer — accessibility.md › Cognitive:
+ *    elsewhere, Escape) and never on a timer, accessibility.md › Cognitive:
  *    "Minimize use of time-boxed interface elements... Prefer dismissing views
  *    with an explicit action."
  *  - It is announced to screen readers via a polite live region. Keyboard users
@@ -66,8 +66,8 @@ export function HintLayer() {
         e.stopPropagation();
         const r = host.getBoundingClientRect();
         // Full-width minus gutters, so there is no horizontal math to get
-        // wrong at 320px. Below the term by preference — above it the card
-        // would hide the very option the term describes — and above only when
+        // wrong at 320px. Below the term by preference, above it the card
+        // would hide the very option the term describes, and above only when
         // the lower half of the screen has no room.
         setPop(
           window.innerHeight - r.bottom > 190

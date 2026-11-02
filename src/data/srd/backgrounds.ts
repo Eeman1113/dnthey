@@ -1,6 +1,6 @@
 /**
  * The 4 backgrounds of SRD 5.2.1. In the 2024 rules the background is where your
- * ability score increases and your Origin feat come from — not your species.
+ * ability score increases and your Origin feat come from, not your species.
  */
 import type { Ability, Skill } from '@/engine/types';
 

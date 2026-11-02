@@ -10,7 +10,7 @@ import {
 } from './types';
 
 if (typeof window === 'undefined') {
-  throw new Error('chrome-nano.ts imported on the server — the Prompt API is client-only');
+  throw new Error('chrome-nano.ts imported on the server. The Prompt API is client-only.');
 }
 
 /**
@@ -20,7 +20,7 @@ if (typeof window === 'undefined') {
 const DEFAULT_CREATE_TIMEOUT_MS = 120_000;
 const DEFAULT_PROMPT_TIMEOUT_MS = 90_000;
 
-// Minimal structural types — the DOM lib does not yet ship these.
+// Minimal structural types, the DOM lib does not yet ship these.
 interface NanoSession {
   prompt(input: string, opts?: Record<string, unknown>): Promise<string>;
   promptStreaming(input: string, opts?: Record<string, unknown>): ReadableStream<string>;

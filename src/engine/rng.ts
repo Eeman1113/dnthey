@@ -2,7 +2,7 @@
  * Seeded, auditable randomness. Every die roll in the game comes from here so that
  * a campaign can be replayed exactly from its event log (BUILD_PROMPT.md §1.5).
  *
- * mulberry32: small, fast, well-distributed 32-bit PRNG. Not cryptographic —
+ * mulberry32: small, fast, well-distributed 32-bit PRNG. Not cryptographic -
  * it does not need to be, and determinism is the whole point.
  */
 export class Rng {
@@ -12,7 +12,7 @@ export class Rng {
     this.state = typeof seed === 'string' ? Rng.hashSeed(seed) : seed >>> 0;
   }
 
-  /** FNV-1a — turns a campaign/event id into a usable 32-bit seed. */
+  /** FNV-1a, turns a campaign/event id into a usable 32-bit seed. */
   static hashSeed(s: string): number {
     let h = 0x811c9dc5;
     for (let i = 0; i < s.length; i++) {

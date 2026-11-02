@@ -180,7 +180,7 @@ export function CreateClient() {
               </span>
               <span className="meta" style={{ display: 'block' }}>
                 {ready
-                  ? `${build.name || 'Unnamed'} — level ${build.level} ${species?.name ?? ''} ${cls?.name ?? ''}`
+                  ? `${build.name || 'Unnamed'}, level ${build.level} ${species?.name ?? ''} ${cls?.name ?? ''}`
                   : 'Fills in as you choose'}
               </span>
             </span>
@@ -247,7 +247,7 @@ function ClassStep({ build, patch, onNext }: StepProps) {
     <>
       <StepHeader
         n={1} title="Choose a class"
-        blurb="In the 2024 rules you pick your class first — it is the biggest decision about how you will actually play."
+        blurb="In the 2024 rules you pick your class first. It is the biggest decision about how you will actually play."
       />
       <div className="opt-grid" style={{ ['--opt-min' as string]: '16.5rem' }}>
         {CLASSES.map((c) => (
@@ -350,7 +350,7 @@ function OriginStep({ build, patch, patchWith, onNext }: StepProps) {
     <>
       <StepHeader
         n={2} title="Choose your origin"
-        blurb="Background and species. In the 2024 rules your ability increases and your first feat come from your background — your species gives traits only."
+        blurb="Background and species. In the 2024 rules your ability increases and your first feat come from your background. Your species gives traits only."
       />
 
       <h3 className="label mb-2">Background</h3>
@@ -431,7 +431,7 @@ function OriginStep({ build, patch, patchWith, onNext }: StepProps) {
       {cls && (
         <>
           <h3 className="label mb-2">
-            Class skills — choose {cls.skillCount} ({build.classSkills.length} chosen)
+            Class skills: choose {cls.skillCount} ({build.classSkills.length} chosen)
           </h3>
           <div className="flex flex-wrap gap-1.5 mb-4">
             {cls.skillChoices.map((s) => {
@@ -512,7 +512,7 @@ function AbilitiesStep({ build, patch, onNext }: StepProps) {
       )}
       {build.scoreMethod === 'point_buy' && (
         <p className="meta mb-3" style={{ color: remaining === 0 ? 'var(--success)' : 'var(--rubric)' }}>
-          {remaining ?? 0} of {POINT_BUY_BUDGET} points remaining. Scores run 8–15 before your background increase.
+          {remaining ?? 0} of {POINT_BUY_BUDGET} points remaining. Scores run 8 to 15 before your background increase.
         </p>
       )}
       {build.scoreMethod === 'rolled' && (
@@ -554,7 +554,7 @@ function AbilitiesStep({ build, patch, onNext }: StepProps) {
                 <button className="btn btn-step" aria-label={`Raise ${ABILITY_NAMES[a]}`}
                   onClick={() => setScore(a, Math.min(15, build.baseScores[a] + 1))}>+</button>
                 <span className="meta-quiet" style={{ width: '3.5rem' }}>
-                  {POINT_BUY_COST[build.baseScores[a]] ?? '—'} pts
+                  {POINT_BUY_COST[build.baseScores[a]] ?? 'n/a'} pts
                 </span>
               </div>
             ) : (
@@ -585,7 +585,7 @@ function AbilitiesStep({ build, patch, onNext }: StepProps) {
         <div className="panel p-4 mb-5">
           <h3 className="label mb-1">{bg.name} ability increase</h3>
           <p className="meta mb-3">
-            Spend 3 points among {bg.abilities.map((a) => ABILITY_NAMES[a]).join(', ')} — either +2/+1 or +1/+1/+1.
+            Spend 3 points among {bg.abilities.map((a) => ABILITY_NAMES[a]).join(', ')}: either +2/+1 or +1/+1/+1.
           </p>
           <div className="flex flex-wrap gap-2">
             <button className="chip"
@@ -662,7 +662,7 @@ function DetailsStep({ build, patch, patchWith }: StepProps) {
       {masteryCount > 0 && (
         <>
           <h3 className="label mb-1">
-            Weapon mastery — choose {masteryCount} ({build.weaponMasteries.length} chosen)
+            Weapon mastery: choose {masteryCount} ({build.weaponMasteries.length} chosen)
           </h3>
           <p className="meta mb-2">
             New in the 2024 rules: each weapon has a mastery property your class can unlock.
@@ -703,7 +703,7 @@ function DetailsStep({ build, patch, patchWith }: StepProps) {
             onChange={(e) => patch({ appearance: e.target.value })} />
         </div>
         <div>
-          <label className="field-label">Flaw — the DM will use this</label>
+          <label className="field-label">Flaw (the DM will use this)</label>
           <textarea rows={3} value={build.personality.flaw}
             placeholder="The way they reliably make things worse."
             onChange={(e) => patch({ personality: { ...build.personality, flaw: e.target.value } })} />

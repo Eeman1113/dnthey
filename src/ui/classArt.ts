@@ -1,6 +1,6 @@
 /**
  * A representative portrait for each class, drawn from the generated library.
- * Chosen so the twelve cards read as twelve different people — varied species,
+ * Chosen so the twelve cards read as twelve different people, varied species,
  * silhouette, age and mood rather than twelve armoured men.
  */
 export const CLASS_ART: Record<string, { id: string; alt: string }> = {

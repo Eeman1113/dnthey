@@ -1,5 +1,5 @@
 /**
- * d20 Tests — the 2024 rules unify ability checks, attack rolls and saving throws
+ * d20 Tests, the 2024 rules unify ability checks, attack rolls and saving throws
  * into one concept. Everything that rolls a d20 for a creature goes through here.
  */
 import { Rng } from './rng';
@@ -77,7 +77,7 @@ export function rollD20(rng: Rng, opts: D20Options): D20Result {
   const natural = dice.find((d) => d.kept)!.value;
   const modifiers: Modifier[] = [...(opts.modifiers ?? [])];
 
-  // Death saves are never modified (2024) — not even by exhaustion.
+  // Death saves are never modified (2024), not even by exhaustion.
   const exh = opts.exhaustionLevel ?? 0;
   if (exh > 0 && opts.kind !== 'death_save') {
     modifiers.push({ label: `exhaustion ${exh}`, value: -2 * exh });

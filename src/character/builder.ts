@@ -68,7 +68,7 @@ export function validateBuild(build: CharacterBuild): ValidationIssue[] {
   const species = SPECIES_BY_ID[build.speciesId];
   const background = BACKGROUNDS_BY_ID[build.backgroundId];
 
-  // An unset field is "not chosen yet", not a malformed value — the creation UI
+  // An unset field is "not chosen yet", not a malformed value, the creation UI
   // shows these as a checklist, so they must read as prompts rather than errors.
   if (!cls) {
     err('classId', build.classId ? `unknown class "${build.classId}"` : 'choose a class');
@@ -127,7 +127,7 @@ export function validateBuild(build: CharacterBuild): ValidationIssue[] {
   for (const s of build.classSkills) {
     if (!cls.skillChoices.includes(s)) err('classSkills', `${s} is not on the ${cls.name} skill list`);
     if (background.skills.includes(s)) {
-      warn('classSkills', `${s} is already granted by your background — pick another to avoid wasting it`);
+      warn('classSkills', `${s} is already granted by your background. Pick another to avoid wasting it`);
     }
   }
   const dupes = build.classSkills.filter((s, i) => build.classSkills.indexOf(s) !== i);
@@ -162,7 +162,7 @@ export function validateBuild(build: CharacterBuild): ValidationIssue[] {
     if (!WEAPONS_BY_ID[id]) err('equippedWeaponIds', `unknown weapon "${id}"`);
   }
   if (build.equippedArmorId && cls.armor.length === 0) {
-    warn('equippedArmorId', `${cls.name} has no armor training — wearing armor will disrupt class features`);
+    warn('equippedArmorId', `${cls.name} has no armor training, so wearing armor will disrupt class features`);
   }
 
   return issues;
@@ -192,7 +192,7 @@ export function makeCharacter(build: CharacterBuild, kind: 'pc' | 'companion' = 
   return { build, state: initialState(build), kind };
 }
 
-/** A complete, legal level-1 character — used for tests, demos and AI companions. */
+/** A complete, legal level-1 character, used for tests, demos and AI companions. */
 export function exampleBuild(overrides: Partial<CharacterBuild> = {}): CharacterBuild {
   const base: CharacterBuild = {
     ...emptyBuild(),

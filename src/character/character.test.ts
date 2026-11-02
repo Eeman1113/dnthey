@@ -77,7 +77,7 @@ describe('ability score methods', () => {
     expect(pointBuyCost({ str: 8, dex: 8, con: 8, int: 8, wis: 8, cha: 8 })).toBe(0);
     expect(pointBuyCost({ str: 15, dex: 15, con: 15, int: 8, wis: 8, cha: 8 })).toBe(27);
     expect(pointBuyRemaining({ str: 15, dex: 15, con: 15, int: 8, wis: 8, cha: 8 })).toBe(0);
-    // 14 costs 7, not 6 — the curve steepens above 13
+    // 14 costs 7, not 6, the curve steepens above 13
     expect(pointBuyCost({ str: 14, dex: 8, con: 8, int: 8, wis: 8, cha: 8 })).toBe(7);
   });
 

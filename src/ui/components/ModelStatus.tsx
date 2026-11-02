@@ -7,7 +7,7 @@ type State = { status: Availability | 'checking'; progress: number };
 
 /**
  * Honest reporting of the on-device model's state. Deliberately never claims
- * "ready" just because availability() says "available" — see BUILD_PROMPT.md Appendix B.
+ * "ready" just because availability() says "available", see BUILD_PROMPT.md Appendix B.
  */
 export function ModelStatus({ compact = false }: { compact?: boolean }) {
   const [state, setState] = useState<State>({ status: 'checking', progress: 0 });

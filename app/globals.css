@@ -4,7 +4,7 @@
    dnthey design system
 
    Thesis: this is a MANUSCRIPT, not a fantasy game skin. Medieval scribes used
-   rubrication — red ink for headings, initials and instructions — while gold
+   rubrication, red ink for headings, initials and instructions, while gold
    leaf was reserved for illumination and spent rarely. That hierarchy is the
    rule here, and it is what keeps the interface from reading as generic:
 
@@ -13,7 +13,7 @@
                    If gold is everywhere it means nothing; it was wallpaper
                    before, which is exactly why it read as cheap.
 
-   Type: IM Fell English (Oxford, 1600s) and Libre Caslon carry the voice —
+   Type: IM Fell English (Oxford, 1600s) and Libre Caslon carry the voice -
    display, prose and numerals. Functional micro-text uses the system face,
    because a historical small-caps serif at 12px is not legible, and Apple's
    typography guidance is explicit that controls want system type while brand
@@ -45,18 +45,18 @@
 
   --content-1:      #EFEAE0;   /* 14.9:1 on panel */
   --content-2:      #B9B3A8;   /*  8.6:1 on panel */
-  --content-3:      #938D83;   /*  5.4:1 on panel — the floor */
+  --content-3:      #938D83;   /*  5.4:1 on panel, the floor */
 
-  --rubric:         #FE5F55;   /* Vibrant Coral — 5.95:1. Accent: selected, active */
+  --rubric:         #FE5F55;   /* Vibrant Coral, 5.95:1. Accent: selected, active */
   --rubric-solid:   #FE5F55;
   --on-rubric:      #1A0F10;   /*  6.2:1 on coral. NOT white: white is 3.0:1   */
-  --gold:           #C6ECAE;   /* Tea Green — 13.65:1. The "illuminated" note  */
+  --gold:           #C6ECAE;   /* Tea Green, 13.65:1. The "illuminated" note  */
 
-  --verdigris:      #94C9A9;   /* Muted Teal — 9.5:1  */
+  --verdigris:      #94C9A9;   /* Muted Teal, 9.5:1  */
   --success:        #94C9A9;
-  --info:           #8E93B8;   /* Glaucous lifted — 6.0:1 (raw #777DA7 is 4.50:1) */
-  --warning:        #FE5F55;   /* shares the accent hue — see note on .issue-warn */
-  --rose:           #885053;   /* Smoky Rose — FILL ONLY on dark (2.9:1 as text) */
+  --info:           #8E93B8;   /* Glaucous lifted, 6.0:1 (raw #777DA7 is 4.50:1) */
+  --warning:        #FE5F55;   /* shares the accent hue, see note on .issue-warn */
+  --rose:           #885053;   /* Smoky Rose, FILL ONLY on dark (2.9:1 as text) */
 
   --grain-opacity:  0.02;
   --art-dim:        0.30;
@@ -79,18 +79,18 @@
     --content-3:    #625860;   /*  6.4:1 on panel */
 
     /* Hue preserved, lightness dropped. The raw palette is unusable as text on
-       a light ground — Tea Green measures 1.14:1 there. color.md › Best
+       a light ground, Tea Green measures 1.14:1 there. color.md › Best
        practices requires supplying a variant for each appearance. */
-    --rubric:       #A80A00;   /* coral darkened     — 7.2:1 */
+    --rubric:       #A80A00;   /* coral darkened    , 7.2:1 */
     --rubric-solid: #A80A00;
     --on-rubric:    #FFFFFF;   /*  7.0:1 on that fill        */
-    --gold:         #3C6E1C;   /* tea green darkened — 5.7:1 */
+    --gold:         #3C6E1C;   /* tea green darkened, 5.7:1 */
 
-    --verdigris:    #206F3F;   /* teal darkened      — 5.8:1 */
+    --verdigris:    #206F3F;   /* teal darkened     , 5.8:1 */
     --success:      #206F3F;
-    --info:         #29368E;   /* glaucous darkened  — 9.7:1 */
+    --info:         #29368E;   /* glaucous darkened , 9.7:1 */
     --warning:      #A80A00;
-    --rose:         #633638;   /*  9.3:1 — usable as text on light */
+    --rose:         #633638;   /*  9.3:1, usable as text on light */
 
     --grain-opacity: 0.045;
     --art-dim:      0.09;
@@ -112,18 +112,18 @@
   --content-3:    #625860;   /*  6.4:1 on panel */
 
   /* Hue preserved, lightness dropped. The raw palette is unusable as text on
-     a light ground — Tea Green measures 1.14:1 there. color.md › Best
+     a light ground, Tea Green measures 1.14:1 there. color.md › Best
      practices requires supplying a variant for each appearance. */
-  --rubric:       #A80A00;   /* coral darkened     — 7.2:1 */
+  --rubric:       #A80A00;   /* coral darkened    , 7.2:1 */
   --rubric-solid: #A80A00;
   --on-rubric:    #FFFFFF;   /*  7.0:1 on that fill        */
-  --gold:         #3C6E1C;   /* tea green darkened — 5.7:1 */
+  --gold:         #3C6E1C;   /* tea green darkened, 5.7:1 */
 
-  --verdigris:    #206F3F;   /* teal darkened      — 5.8:1 */
+  --verdigris:    #206F3F;   /* teal darkened     , 5.8:1 */
   --success:      #206F3F;
-  --info:         #29368E;   /* glaucous darkened  — 9.7:1 */
+  --info:         #29368E;   /* glaucous darkened , 9.7:1 */
   --warning:      #A80A00;
-  --rose:         #633638;   /*  9.3:1 — usable as text on light */
+  --rose:         #633638;   /*  9.3:1, usable as text on light */
 
   --grain-opacity: 0.045;
   --art-dim:      0.09;
@@ -148,10 +148,10 @@ html {
 
 /* ---- Type scale. Every value is the px it ACTUALLY renders at 16px root. ---- */
 :root {
-  --text-xs:   0.8125rem;  /* 13px — absolute floor, tags and dense numerals */
-  --text-sm:   0.875rem;   /* 14px — labels, meta, supporting lines          */
-  --text-base: 0.9375rem;  /* 15px — body copy and controls                  */
-  --text-md:   1rem;       /* 16px — card titles, emphasised body            */
+  --text-xs:   0.8125rem;  /* 13px, absolute floor, tags and dense numerals */
+  --text-sm:   0.875rem;   /* 14px, labels, meta, supporting lines          */
+  --text-base: 0.9375rem;  /* 15px, body copy and controls                  */
+  --text-md:   1rem;       /* 16px, card titles, emphasised body            */
   --text-lg:   1.125rem;   /* 18px                                           */
 }
 
@@ -194,7 +194,7 @@ h3 { font-size: 1.125rem; line-height: 1.25; }
   color: var(--content-1);
 }
 
-/* Small-caps section label. 13px system face — the old 12px IM Fell SC at
+/* Small-caps section label. 13px system face, the old 12px IM Fell SC at
    3.3:1 was the single worst readability failure in the app. */
 .label {
   font-family: var(--font-ui);
@@ -225,8 +225,8 @@ h3 { font-size: 1.125rem; line-height: 1.25; }
 
 /* Numerals use the UI face, NOT IM Fell.
    IM Fell ships old-style (text) figures with no lining set, so "10" renders as
-   "IO" and "11" as "II". For armour class and hit points — the numbers a player
-   reads fastest and trusts most — that is a misread, not a flourish. Period
+   "IO" and "11" as "II". For armour class and hit points, the numbers a player
+   reads fastest and trusts most, that is a misread, not a flourish. Period
    voice stays in headings and prose where it costs nothing. */
 .stat-num {
   font-family: var(--font-ui);
@@ -303,7 +303,7 @@ strong { font-weight: 400; color: var(--content-1); }
 .btn-quiet { background: transparent; border-color: transparent; color: var(--content-2); }
 .btn-quiet:hover:not(:disabled) { background: var(--raised); color: var(--content-1); }
 
-/* Visible keyboard focus everywhere — desktop quality floor. */
+/* Visible keyboard focus everywhere, desktop quality floor. */
 :where(a, button, input, select, textarea, [tabindex]):focus-visible {
   outline: 2px solid var(--rubric);
   outline-offset: 2px;
@@ -539,7 +539,7 @@ button:focus-visible [data-hint]::before { transform: translateX(-50%); }
 
    Everything below this line is additive: the desktop layout is reached by
    `@media (min-width: 900px)` or is simply the untouched default, and the
-   phone layout is the override. No colour token values are defined here —
+   phone layout is the override. No colour token values are defined here -
    every surface and every text colour is composed from the semantic tokens
    above, so the palette stays the single source of truth.
 
@@ -586,7 +586,7 @@ button:focus-visible [data-hint]::before { transform: translateX(-50%); }
   :root {
     /* 100% of a 16px default = 16px root, so .label and .meta (0.8125rem)
        land on 13px rather than the 12.2px they measured at a 15px root, and
-       form fields reach 16px — below which iOS Safari zooms on focus. */
+       form fields reach 16px, below which iOS Safari zooms on focus. */
     font-size: 100%;
   }
 
@@ -621,7 +621,7 @@ button:focus-visible [data-hint]::before { transform: translateX(-50%); }
 
 /* ------------------------------------------------------------- title bar --
    Brand, model status and theme toggle. One row on desktop; on a phone the
-   status line — which can read "Dungeon Master must be summoned" — takes its
+   status line, which can read "Dungeon Master must be summoned", takes its
    own row instead of crushing the other two.                                */
 
 .title-bar {
@@ -742,7 +742,7 @@ button:focus-visible [data-hint]::before { transform: translateX(-50%); }
 
 /* ------------------------------------------------------------ ability row --
    Desktop: name | control | modifier on one line. Phone: name and modifier on
-   the first line, the control on its own line beneath — the stacked layout
+   the first line, the control on its own line beneath, the stacked layout
    typography.md recommends for horizontally constrained rows.               */
 
 .ability-row {
@@ -900,13 +900,13 @@ button:focus-visible [data-hint]::before { transform: translateX(-50%); }
 
    A marked term is therefore tappable: HintLayer catches the tap and shows
    the same text in an anchored card. The hint element itself stays a
-   non-focusable <span> inside the card <button> — no nested interactive
-   element — and the card's aria-label still spells every term out.          */
+   non-focusable <span> inside the card <button>, no nested interactive
+   element, and the card's aria-label still spells every term out.          */
 
 /* On a device with no hover the CSS tooltip is dead weight, and worse: it is
    an absolutely positioned box up to 17rem wide anchored at the middle of a
    tag, so it pushes the document's scroll width past the viewport and the
-   whole page scrolls sideways. Remove it there — HintLayer serves the same
+   whole page scrolls sideways. Remove it there, HintLayer serves the same
    text on tap. */
 @media (hover: none) {
   [data-hint]::after,
@@ -995,7 +995,7 @@ button:focus-visible [data-hint]::before { transform: translateX(-50%); }
   gap: 0.625rem;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--opt-min, 13rem)), 1fr));
 }
-/* Short cards — a name and two tags — can hold two up as soon as there is
+/* Short cards, a name and two tags, can hold two up as soon as there is
    room for a readable line, which saves a 16-item list becoming 1300px of
    scroll. Below that they go single file. */
 @media (min-width: 375px) and (max-width: 899.98px) {
@@ -1008,7 +1008,7 @@ button:focus-visible [data-hint]::before { transform: translateX(-50%); }
    The thumbnail is decorative (alt=""): the class name beside it already
    carries the meaning, so a screen reader announcing the portrait would just
    be noise (images.md › Best practices). It loads the 128px thumb, never the
-   512px portrait — the slot is 56px. */
+   512px portrait, the slot is 56px. */
 .card-head { display: flex; gap: 0.7rem; align-items: flex-start; }
 .card-head-text { min-width: 0; flex: 1; }
 
@@ -1021,7 +1021,7 @@ button:focus-visible [data-hint]::before { transform: translateX(-50%); }
   border: 1px solid var(--hairline);
   background: var(--raised);
   /* No desaturation. The art is hand-inked with fine hatching, which already
-     loses contrast when downscaled — muting it further turned the faces to
+     loses contrast when downscaled, muting it further turned the faces to
      mud at thumbnail size. */
 }
 .card-select[data-selected="true"] .card-portrait { border-color: var(--rubric); }

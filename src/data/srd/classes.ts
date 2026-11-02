@@ -27,7 +27,7 @@ export interface CharClass {
   subclassLevel: number;
   /** One line on what it actually feels like to play. Shown on the class card. */
   description: string;
-  /** The fantasy, in a few words — the hook under the name. */
+  /** The fantasy, in a few words, the hook under the name. */
   tagline: string;
   startingEquipment: { option: 'A' | 'B'; items: string[]; gold: number }[];
   features: ClassFeature[];
@@ -40,7 +40,7 @@ export const CLASSES: CharClass[] = [
     armor: ['Light', 'Medium', 'Shields'], weapons: ['Simple', 'Martial'], caster: 'none',
     weaponMasteryCount: 2, subclassName: 'Path of the Berserker', subclassLevel: 3,
     tagline: 'Rage into the thick of it and refuse to go down',
-    description: 'You run at the problem. Huge hit points, damage resistance while raging, and the best survivability in the game — at the cost of subtlety and spells.',
+    description: 'You run at the problem. Huge hit points, damage resistance while raging, and the best survivability in the game, at the cost of subtlety and spells.',
     startingEquipment: [
       { option: 'A', items: ['Greataxe', 'Handaxe (4)', 'Explorer’s Pack'], gold: 15 },
       { option: 'B', items: [], gold: 75 },
@@ -222,7 +222,7 @@ export const CLASSES: CharClass[] = [
     armor: [], weapons: ['Simple'], caster: 'full', spellcastingAbility: 'cha',
     subclassName: 'Draconic Sorcery', subclassLevel: 3,
     tagline: 'Raw innate magic, bent into new shapes mid-cast',
-    description: 'A full caster with a smaller spell list but Metamagic — spend Sorcery Points to twin a spell, cast it without gestures, or push it further than it should go.',
+    description: 'A full caster with a smaller spell list but Metamagic: spend Sorcery Points to twin a spell, cast it without gestures, or push it further than it should go.',
     startingEquipment: [
       { option: 'A', items: ['Spear', 'Dagger (2)', 'Arcane Focus (crystal)', 'Dungeoneer’s Pack'], gold: 28 },
       { option: 'B', items: [], gold: 50 },
