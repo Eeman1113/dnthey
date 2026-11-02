@@ -30,6 +30,9 @@ import { useEffect, useRef, useState } from 'react';
  */
 export function HintLayer() {
   const [pop, setPop] = useState<{ text: string; top?: number; bottom?: number } | null>(null);
+  /** Pointer tooltip. Separate from `pop`, which is the touch popover. */
+  const [tip, setTip] = useState<{ text: string; x: number; y: number } | null>(null);
+  const tipRef = useRef<HTMLDivElement | null>(null);
   const openRef = useRef(false);
   const coarseRef = useRef(false);
 
@@ -85,17 +88,50 @@ export function HintLayer() {
       }
     };
 
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && openRef.current) setPop(null);
+    /**
+     * Hover tooltip. This lives here rather than in CSS because a `::after`
+     * anchored at the middle of the term cannot know where the viewport edge
+     * is: on a left-column card the box ran off-screen and the start of the
+     * sentence was unreadable. Positions are clamped below.
+     */
+    const onOver = (e: PointerEvent | MouseEvent) => {
+      if (!fine()) return;
+      const t = e.target as Element | null;
+      if (!t || typeof t.closest !== 'function') return;
+      const host = t.closest('[data-hint]') as HTMLElement | null;
+      const text = host?.getAttribute('data-hint');
+      if (!host || !text) return;
+      const r = host.getBoundingClientRect();
+      setTip({ text, x: r.left + r.width / 2, y: r.top });
     };
-    const close = () => { if (openRef.current) setPop(null); };
 
+    const onOut = (e: PointerEvent | MouseEvent) => {
+      const t = e.relatedTarget as Element | null;
+      if (t && typeof t.closest === 'function' && t.closest('[data-hint]')) return;
+      setTip(null);
+    };
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { if (openRef.current) setPop(null); setTip(null); }
+    };
+    const close = () => { if (openRef.current) setPop(null); setTip(null); };
+
+    // Both: pointer events are the modern path, but mouseover/mouseout keep
+    // this working under synthetic input and older event pipelines.
+    document.addEventListener('pointerover', onOver as EventListener, true);
+    document.addEventListener('pointerout', onOut as EventListener, true);
+    document.addEventListener('mouseover', onOver as EventListener, true);
+    document.addEventListener('mouseout', onOut as EventListener, true);
     document.addEventListener('pointerdown', onPointerDown, true);
     document.addEventListener('click', onClick, true);
     document.addEventListener('keydown', onKey);
     window.addEventListener('scroll', close, true);
     window.addEventListener('resize', close);
     return () => {
+      document.removeEventListener('pointerover', onOver as EventListener, true);
+      document.removeEventListener('pointerout', onOut as EventListener, true);
+      document.removeEventListener('mouseover', onOver as EventListener, true);
+      document.removeEventListener('mouseout', onOut as EventListener, true);
       document.removeEventListener('pointerdown', onPointerDown, true);
       document.removeEventListener('click', onClick, true);
       document.removeEventListener('keydown', onKey);
@@ -104,9 +140,37 @@ export function HintLayer() {
     };
   }, []);
 
-  if (!pop) return null;
+  // Measure then clamp: the tooltip's width depends on its text, so the only
+  // honest way to keep it inside the viewport is to place it after layout.
+  useEffect(() => {
+    const el = tipRef.current;
+    if (!el || !tip) return;
+    const M = 8;
+    const { width: w, height: h } = el.getBoundingClientRect();
+    const left = Math.min(Math.max(M, tip.x - w / 2), window.innerWidth - w - M);
+    const above = tip.y - h - 10;
+    const top = above >= M ? above : tip.y + 26;   // flip under the term if it would clip the top
+    el.style.left = `${Math.round(left)}px`;
+    el.style.top = `${Math.round(top)}px`;
+    el.style.visibility = 'visible';
+  }, [tip]);
+
+  if (!pop && !tip) return null;
 
   return (
+    <>
+      {tip && (
+        <div
+          ref={tipRef}
+          role="tooltip"
+          className="hint-tip"
+          // Hidden for the first frame so the unclamped position is never painted.
+          style={{ left: 0, top: 0, visibility: 'hidden' }}
+        >
+          {tip.text}
+        </div>
+      )}
+      {pop && (
     <div
       data-hint-pop
       role="status"
@@ -126,5 +190,7 @@ export function HintLayer() {
         </button>
       </div>
     </div>
+      )}
+    </>
   );
 }

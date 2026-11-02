@@ -464,19 +464,23 @@ input[type="text"]:focus, textarea:focus, select:focus {
    element inside a button. Keyboard and screen-reader users get the same
    information from the button's aria-label, which spells every term out.      */
 
-[data-hint] { position: relative; }
+/* The hover tooltip is rendered by HintLayer, not by CSS.
 
-[data-hint]::after {
-  content: attr(data-hint);
-  position: absolute;
-  bottom: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%) translateY(3px);
-  z-index: 60;
-  width: max-content;
-  max-width: 17rem;
-  padding: 0.45rem 0.6rem;
-  border-radius: 7px;
+   It used to be a `::after` on the tag at `left:50%; translateX(-50%)`, which
+   has no way to know where the viewport edge is: on a left-column card the
+   tooltip ran off-screen and the first half of the sentence was unreadable.
+   Pure CSS cannot clamp to the viewport, so hover and touch now share one
+   JS-positioned, viewport-clamped layer. */
+
+.tag[data-hint] { border-bottom-style: dashed; cursor: help; }
+
+/* Pointer tooltip: small, anchored near the term, clamped by HintLayer. */
+.hint-tip {
+  position: fixed;
+  z-index: 70;
+  max-width: 19rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 8px;
   background: var(--raised);
   border: 1px solid var(--hairline-lit);
   box-shadow: var(--shadow);
@@ -487,40 +491,9 @@ input[type="text"]:focus, textarea:focus, select:focus {
   letter-spacing: 0;
   text-transform: none;
   line-height: 1.5;
-  white-space: normal;
-  text-align: left;
-  opacity: 0;
   pointer-events: none;
-  transition: opacity 110ms ease, transform 110ms ease;
 }
-[data-hint]::before {
-  content: '';
-  position: absolute;
-  bottom: calc(100% + 3px);
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 61;
-  border: 5px solid transparent;
-  border-top-color: var(--hairline-lit);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 110ms ease;
-}
-[data-hint]:hover::after,
-[data-hint]:hover::before,
-button:focus-visible [data-hint]::after,
-button:focus-visible [data-hint]::before {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-button:focus-visible [data-hint]::before { transform: translateX(-50%); }
 
-/* A tag that carries a hint shows a dotted underline so people know to hover. */
-.tag[data-hint] { border-bottom-style: dashed; cursor: help; }
-
-@media (prefers-reduced-motion: reduce) {
-  [data-hint]::after { transition: none; transform: translateX(-50%); }
-}
 
 /* Class cards carry a one-line hook under the name, so the grid reads as
    twelve choices rather than twelve pieces of notation. */
@@ -531,7 +504,7 @@ button:focus-visible [data-hint]::before { transform: translateX(-50%); }
   line-height: 1.5;
   color: var(--content-2);
 }
-.card-class { min-height: 10.5rem; display: flex; flex-direction: column; }
+.card-class { min-height: 17rem; display: flex; flex-direction: column; padding-top: 0.85rem; }
 .card-class .card-meta { margin-top: auto; padding-top: 0.6rem; }
 
 /* ===========================================================================
@@ -903,25 +876,6 @@ button:focus-visible [data-hint]::before { transform: translateX(-50%); }
    non-focusable <span> inside the card <button>, no nested interactive
    element, and the card's aria-label still spells every term out.          */
 
-/* On a device with no hover the CSS tooltip is dead weight, and worse: it is
-   an absolutely positioned box up to 17rem wide anchored at the middle of a
-   tag, so it pushes the document's scroll width past the viewport and the
-   whole page scrolls sideways. Remove it there, HintLayer serves the same
-   text on tap. */
-@media (hover: none) {
-  [data-hint]::after,
-  [data-hint]::before { content: none; }
-}
-
-/* Keyboard parity for the standalone terms in the character sheet, which are
-   real buttons rather than spans inside a card. */
-[data-hint]:focus-visible::after,
-[data-hint]:focus-visible::before {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-[data-hint]:focus-visible::before { transform: translateX(-50%); }
-
 /* A term that is its own control: looks like the text around it, carries the
    same dashed "there is more here" mark as .tag[data-hint]. */
 .hint-term {
@@ -1009,20 +963,102 @@ button:focus-visible [data-hint]::before { transform: translateX(-50%); }
    carries the meaning, so a screen reader announcing the portrait would just
    be noise (images.md › Best practices). It loads the 128px thumb, never the
    512px portrait, the slot is 56px. */
-.card-head { display: flex; gap: 0.7rem; align-items: flex-start; }
-.card-head-text { min-width: 0; flex: 1; }
+/* ---- Class card -----------------------------------------------------------
+   Stacked, not side-by-side. A portrait beside the text can only ever be as
+   wide as the text will spare, which capped it near 80px. Giving the art the
+   full card width lets it be the first thing you look at, which is the point
+   of a class picker.
+
+   The image is decorative (alt=""): the class name directly beneath it already
+   carries the meaning, so announcing the portrait would only add noise
+   (images.md > Best practices). */
+.card-head { display: block; }
+.card-head-text { min-width: 0; }
 
 .card-portrait {
-  flex: none;
-  width: 74px;
-  height: 74px;
-  border-radius: 9px;
-  object-fit: cover;
-  border: 1px solid var(--hairline);
-  background: var(--raised);
-  /* No desaturation. The art is hand-inked with fine hatching, which already
-     loses contrast when downscaled, muting it further turned the faces to
-     mud at thumbnail size. */
+  display: block;
+  width: 100%;
+  height: 150px;
+  object-fit: contain;
+  object-position: center bottom;
+  margin-bottom: 0.65rem;
+  /* Cut out, so no frame, fill or border: the figure stands on the card
+     itself. A box around a transparent PNG re-adds the very rectangle the
+     cutout removed. */
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.3));
 }
-.card-select[data-selected="true"] .card-portrait { border-color: var(--rubric); }
-.card-class .card-title { margin-top: 0.1rem; }
+.card-class .card-title { margin-top: 0; }
+
+/* ---- Selection bar --------------------------------------------------------
+   Docked confirmation of the current choice. Sticky rather than appended below
+   the grid: picking a card in the top row used to render the detail far below
+   the fold, so the only thing confirming the choice was the only thing not on
+   screen. Sticky also keeps the primary action within reach without scrolling,
+   which is the one-handed-reach point in layout.md. */
+.select-bar {
+  position: sticky;
+  bottom: max(0.75rem, env(safe-area-inset-bottom));
+  z-index: 30;
+  margin-top: 1.25rem;
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  backdrop-filter: blur(12px) saturate(1.1);
+  border: 1px solid var(--hairline-lit);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.select-bar__main {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.7rem 0.9rem;
+}
+
+.select-bar__art {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  object-position: center bottom;
+}
+
+.select-bar__text { min-width: 0; flex: 1; }
+
+.select-bar__name {
+  font-family: var(--font-ui);
+  font-size: var(--text-md);
+  font-weight: 620;
+  color: var(--content-1);
+  margin: 0;
+  line-height: 1.2;
+}
+
+/* One line on a wide screen: the full description lives behind "What you get". */
+.select-bar__blurb {
+  margin: 0.15rem 0 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.select-bar__actions { display: flex; gap: 0.5rem; flex: none; }
+
+.select-bar__details {
+  padding: 0 0.9rem 0.9rem;
+  border-top: 1px solid var(--hairline);
+  margin-top: 0.1rem;
+  padding-top: 0.8rem;
+  max-height: 44vh;
+  overflow-y: auto;
+}
+
+@media (max-width: 899.98px) {
+  .select-bar__main { flex-wrap: wrap; }
+  .select-bar__text { flex-basis: calc(100% - 52px - 0.85rem); }
+  /* Actions drop to their own full-width row so both stay comfortably tappable. */
+  .select-bar__actions { width: 100%; }
+  .select-bar__actions .btn { flex: 1; }
+  .select-bar__blurb { -webkit-line-clamp: 2; }
+}

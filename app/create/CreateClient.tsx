@@ -243,6 +243,7 @@ export function CreateClient() {
 
 function ClassStep({ build, patch, onNext }: StepProps) {
   const cls = CLASSES.find((c) => c.id === build.classId);
+  const [showFeatures, setShowFeatures] = useState(false);
   return (
     <>
       <StepHeader
@@ -271,11 +272,11 @@ function ClassStep({ build, patch, onNext }: StepProps) {
                 return art ? (
                   <Image
                     className="card-portrait"
-                    src={art.thumb}
+                    src={art.src}
                     alt=""
-                    width={160}
-                    height={160}
-                    sizes="80px"
+                    width={384}
+                    height={384}
+                    sizes="(max-width: 899px) 44vw, 240px"
                     loading="lazy"
                   />
                 ) : null;
@@ -298,34 +299,54 @@ function ClassStep({ build, patch, onNext }: StepProps) {
         ))}
       </div>
 
+      {/* Selection feedback docks to the bottom of the viewport instead of
+          appending below the grid. Clicking a card in the top row used to push
+          the detail far off-screen, so the one thing confirming your choice was
+          the one thing you could not see. The bar also keeps the primary action
+          permanently in reach, which matters most on a phone. */}
       {cls && (
-        <div className="panel mt-5" style={{ padding: '1.25rem' }}>
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div>
-              <h3 style={{ fontSize: '1.375rem' }}>{cls.name}</h3>
-              <p className="prose-ink" style={{ fontSize: 'var(--text-base)', marginTop: '0.35rem', maxWidth: '52ch', color: 'var(--content-1)' }}>
-                {cls.description}
-              </p>
-              <p className="meta" style={{ marginTop: '0.4rem' }}>
+        <div className="select-bar" role="region" aria-label={`${cls.name} selected`}>
+          <div className="select-bar__main">
+            {(() => {
+              const art = classArtSrc(cls.id);
+              return art ? (
+                <Image className="select-bar__art" src={art.src} alt="" width={384} height={384} sizes="52px" />
+              ) : null;
+            })()}
+            <div className="select-bar__text">
+              <p className="select-bar__name">{cls.name}</p>
+              <p className="meta select-bar__blurb">{cls.description}</p>
+            </div>
+            <div className="select-bar__actions">
+              <button
+                type="button"
+                className="btn btn-quiet"
+                aria-expanded={showFeatures}
+                onClick={() => setShowFeatures((v) => !v)}
+              >
+                {showFeatures ? 'Hide details' : 'What you get'}
+              </button>
+              <button className="btn btn-primary" onClick={onNext}>Continue to Origin</button>
+            </div>
+          </div>
+
+          {showFeatures && (
+            <div className="select-bar__details">
+              <p className="meta" style={{ marginBottom: '0.6rem' }}>
                 Saves in {cls.savingThrows.map((sv) => ABILITY_NAMES[sv]).join(' and ')}
                 {' · '}{cls.armor.length ? cls.armor.join(', ') + ' armor' : 'no armor training'}
                 {' · '}{cls.subclassName} at level {cls.subclassLevel}
               </p>
+              <ul style={{ display: 'grid', gap: '0.55rem' }}>
+                {cls.features.filter((f) => f.level === 1).map((f) => (
+                  <li key={f.name} style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>
+                    <strong>{f.name}.</strong>{' '}
+                    <span style={{ color: 'var(--content-2)' }}>{f.text}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
-            <button className="btn btn-primary hide-compact" onClick={onNext}>Continue to Origin</button>
-          </div>
-
-          <hr className="rule" style={{ margin: '1rem 0' }} />
-
-          <h4 className="label" style={{ marginBottom: '0.5rem' }}>What you get at level 1</h4>
-          <ul style={{ display: 'grid', gap: '0.6rem' }}>
-            {cls.features.filter((f) => f.level === 1).map((f) => (
-              <li key={f.name} style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>
-                <strong>{f.name}.</strong>{' '}
-                <span style={{ color: 'var(--content-2)' }}>{f.text}</span>
-              </li>
-            ))}
-          </ul>
+          )}
         </div>
       )}
     </>
