@@ -9,9 +9,6 @@ import {
   type SessionOptions, ModelTimeoutError, ModelUnavailableError,
 } from './types';
 
-if (typeof window === 'undefined') {
-  throw new Error('chrome-nano.ts imported on the server. The Prompt API is client-only.');
-}
 
 /**
  * Measured on Chrome 156: create() can hang indefinitely even when availability()
@@ -36,6 +33,12 @@ interface NanoStatic {
 }
 
 function nano(): NanoStatic {
+  // Guard at the call site, not at import time. A module-scope throw breaks
+  // static export, because Next still renders the HTML shell of a client
+  // component on the server and merely importing the chain crashes the build.
+  if (typeof window === 'undefined') {
+    throw new ModelUnavailableError('The Prompt API is client-only and cannot run on the server.');
+  }
   const g = globalThis as unknown as { LanguageModel?: NanoStatic };
   if (!g.LanguageModel) {
     throw new ModelUnavailableError(
