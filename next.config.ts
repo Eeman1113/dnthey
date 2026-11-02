@@ -22,6 +22,9 @@ const nextConfig: NextConfig = {
   trailingSlash: true,          // /create/ resolves to create/index.html on Pages
   images: { unoptimized: true },
   devIndicators: false,
+  // Next regenerates AGENTS.md on every build, and it writes em dashes into
+  // it, which keeps reintroducing them to a repo that must not contain any.
+  agentRules: false,
 };
 
 export default nextConfig;
