@@ -15,6 +15,7 @@ import { rollDamage } from '@/engine/dice';
 import { derive } from '@/character/derive';
 import type { Monster } from '@/data/srd/encounters';
 import type { Campaign } from './types';
+import type { ConditionName } from '@/engine/types';
 
 export interface Combatant {
   id: string;
@@ -29,6 +30,15 @@ export interface Combatant {
   doctrine?: string;
   /** Foes break when hurt badly enough, unless their doctrine says otherwise. */
   fled?: boolean;
+  /**
+   * A player character at 0 HP is dying, not dead: they roll a death save at
+   * the start of each of their turns. Monsters simply drop.
+   */
+  dying?: boolean;
+  dead?: boolean;
+  stable?: boolean;
+  deathSaves?: { successes: number; failures: number };
+  conditions?: { name: ConditionName; source: string }[];
   attack: { name: string; toHit: number; damage: string; bonus: number };
 }
 
@@ -93,7 +103,7 @@ export function startCombat(campaign: Campaign, foes: Monster[]): CombatState {
 export interface AttackReport {
   attacker: string; target: string; weapon: string;
   hit: boolean; crit: boolean; natural: number; total: number; ac: number;
-  damage: number; targetDown: boolean; targetFled: boolean;
+  damage: number; targetDown: boolean; targetFled: boolean; targetDead: boolean;
 }
 
 export function resolveAttack(
@@ -114,7 +124,24 @@ export function resolveAttack(
       modifiers: [{ label: 'mod', value: attacker.attack.bonus }],
     });
     damage = dmg.total;
-    target.hp = Math.max(0, target.hp - damage);
+
+    // Damage taken while already down is an automatic death save failure, and
+    // two of them on a critical hit.
+    if (target.hp === 0 && target.dying) {
+      const saves = target.deathSaves ?? { successes: 0, failures: 0 };
+      saves.failures += roll.isNat20 ? 2 : 1;
+      target.deathSaves = saves;
+      if (saves.failures >= 3) { target.dead = true; target.dying = false; }
+    } else {
+      const before = target.hp;
+      target.hp = Math.max(0, target.hp - damage);
+      if (target.hp === 0 && before > 0) {
+        // Damage at or beyond the maximum in a single hit kills outright.
+        if (damage - before >= target.maxHp) { target.dead = true; }
+        else if (target.side === 'party') { target.dying = true; target.deathSaves = { successes: 0, failures: 0 }; }
+        else { target.dead = true; }
+      }
+    }
   }
 
   // A foe at or below a third of its health breaks, unless its doctrine says
@@ -129,18 +156,56 @@ export function resolveAttack(
   return {
     attacker: attacker.name, target: target.name, weapon: attacker.attack.name,
     hit, crit: roll.isNat20, natural: roll.natural, total: roll.total, ac: target.ac,
-    damage, targetDown: target.hp === 0, targetFled: fled,
+    damage,
+    targetDown: target.hp === 0 && !!target.dying,
+    targetFled: fled,
+    targetDead: !!target.dead,
   };
 }
 
+/**
+ * Who can still act. A dying player character is not acting but is also not
+ * out of the fight: the party has not lost while someone can still be revived.
+ */
 export const living = (s: CombatState, side: 'party' | 'foe') =>
-  s.order.filter((c) => c.side === side && c.hp > 0 && !c.fled);
+  s.order.filter((c) => c.side === side && c.hp > 0 && !c.fled && !c.dead);
+
+/** Still in the fight in the sense that matters for ending it. */
+export const standing = (s: CombatState, side: 'party' | 'foe') =>
+  s.order.filter((c) => c.side === side && !c.fled && !c.dead);
+
+/**
+ * A death saving throw: DC 10, three successes stabilise, three failures kill.
+ * A natural 20 brings them back up on 1 HP, a natural 1 counts as two failures.
+ * It takes no modifiers at all, not even exhaustion (2024 rules).
+ */
+export function rollDeathSave(
+  seed: string, state: CombatState, c: Combatant,
+): { natural: number; success: boolean; saves: { successes: number; failures: number }; outcome: 'stable' | 'dead' | 'revived' | 'ongoing' } {
+  const rng = new Rng(`${seed}:${state.id}:death:${c.id}:${state.round}`);
+  const r = rollD20(rng, { kind: 'death_save', dc: 10, reason: `${c.name} death save` });
+  const saves = c.deathSaves ?? { successes: 0, failures: 0 };
+
+  if (r.isNat20) {
+    c.hp = 1; c.dying = false; c.deathSaves = { successes: 0, failures: 0 };
+    return { natural: r.natural, success: true, saves: c.deathSaves, outcome: 'revived' };
+  }
+  if (r.isNat1) saves.failures += 2;
+  else if (r.success) saves.successes += 1;
+  else saves.failures += 1;
+
+  c.deathSaves = saves;
+  if (saves.failures >= 3) { c.dead = true; c.dying = false; return { natural: r.natural, success: false, saves, outcome: 'dead' }; }
+  if (saves.successes >= 3) { c.stable = true; c.dying = false; return { natural: r.natural, success: true, saves, outcome: 'stable' }; }
+  return { natural: r.natural, success: r.success ?? false, saves, outcome: 'ongoing' };
+}
 
 export function checkEnd(s: CombatState, foes: Monster[]): CombatState {
   if (living(s, 'foe').length === 0) {
     return { ...s, over: true, outcome: 'victory', xpAwarded: foes.reduce((a, m) => a + m.xp, 0) };
   }
-  if (living(s, 'party').length === 0) return { ...s, over: true, outcome: 'defeat' };
+  // The party loses only when nobody is left who could still be saved.
+  if (standing(s, 'party').length === 0) return { ...s, over: true, outcome: 'defeat' };
   return s;
 }
 
@@ -152,7 +217,8 @@ export function advance(s: CombatState): CombatState {
   let guard = 0;
   while (guard++ < s.order.length * 2) {
     const c = s.order[turn]!;
-    if (c.hp > 0 && !c.fled) break;
+    // A dying character still gets a turn: it is when they roll their save.
+    if ((c.hp > 0 || c.dying) && !c.fled && !c.dead) break;
     turn += 1;
     if (turn >= s.order.length) { turn = 0; round += 1; }
   }

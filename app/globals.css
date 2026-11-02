@@ -1369,3 +1369,15 @@ input[type="text"]:focus, textarea:focus, select:focus {
 
 /* Says what the next few minutes look like, so "Begin" is not a blind step. */
 .flow-note { margin-top: 1.1rem; font-size: var(--text-sm); }
+
+/* ---- companion trust -----------------------------------------------------
+   Five pips rather than a number: this is a relationship, not a statistic,
+   and a precise figure invites optimising it instead of playing. */
+.companion-row { padding: 0.8rem; display: flex; gap: 0.65rem; align-items: center; }
+.bond { display: inline-flex; gap: 3px; margin-top: 0.35rem; cursor: help; }
+.bond__pip {
+  width: 14px; height: 4px; border-radius: 2px;
+  background: var(--hairline-lit);
+  transition: background 200ms ease;
+}
+.bond__pip[data-on='true'] { background: var(--verdigris); }

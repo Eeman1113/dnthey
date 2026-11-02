@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ulid } from 'ulid';
 import { derive } from '@/character/derive';
+import { shortRest, longRest, awardXp } from '@/engine/rest';
 import { exampleBuild, initialState, isPlayable } from '@/character/builder';
 import { formatMod } from '@/engine/types';
 import { Art } from '@/ui/components/Art';
@@ -14,8 +15,10 @@ import { matchBiome } from '@/ui/scenery';
 import { buildWorld, cleanProse, companionIntro } from '@/agents/dm';
 import { modelAvailable, prewarm, destroyAll } from '@/agents/session';
 import { NARRATOR, ADJUDICATOR } from '@/agents/prompts';
+import { AUX_SYSTEM } from '@/agents/session';
 import {
-  playBeat, maybeCompanionSpeaks, encounterFor, openingBeat, runCombatRound, runUpToPlayer,
+  playBeat, maybeCompanionSpeaks, maybeBanter, applyStance, encounterFor, openingBeat,
+  runCombatRound, runUpToPlayer, rememberBeat,
 } from '@/campaign/beat';
 import { startCombat, type CombatState } from '@/campaign/combat';
 import { CombatPanel } from '@/ui/components/CombatPanel';
@@ -43,9 +46,18 @@ export function PlayClient() {
   const [status, setStatus] = useState<string | null>(null);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
-  const [combat, setCombat] = useState<CombatState | null>(null);
-  const [foes, setFoes] = useState<Monster[]>([]);
+  // Combat lives on the campaign so a reload restores the fight exactly,
+  // including whose turn it is. It used to be component state and was lost.
+  const combat = campaign?.combat ?? null;
+  const foes = campaign?.foes ?? [];
+  const setCombat = useCallback((c: CombatState | null) => {
+    setCampaign((p) => (p ? { ...p, combat: c } : p));
+  }, []);
+  const setFoes = useCallback((f: Monster[]) => {
+    setCampaign((p) => (p ? { ...p, foes: f } : p));
+  }, []);
   const [tone, setTone] = useState('grim, rain-soaked, low magic, a small personal stake');
+  const [safetyLines, setSafetyLines] = useState('');
   const [intros, setIntros] = useState<{ id: string; line: string }[]>([]);
   const [pending, setPending] = useState<Campaign | null>(null);
   const [hasCharacter, setHasCharacter] = useState(true);
@@ -59,7 +71,11 @@ export function PlayClient() {
     setHasCharacter(loadCharacters().length > 0);
     // The slow part is session creation, about 9.5s cold. Start it while the
     // player is still reading the setup screen.
-    if (modelAvailable()) { prewarm('narrator', NARRATOR); prewarm('adjudicator', ADJUDICATOR); }
+    if (modelAvailable()) {
+      prewarm('narrator', NARRATOR);
+      prewarm('adjudicator', ADJUDICATOR);
+      prewarm('aux', AUX_SYSTEM);
+    }
     return () => destroyAll();
   }, []);
 
@@ -86,13 +102,13 @@ export function PlayClient() {
 
     const saved = loadCharacters();
     const build = saved.length ? saved[saved.length - 1]! : exampleBuild();
-    const { world, generated } = await buildWorld(tone);
+    const { world, generated } = await buildWorld(tone, safetyLines);
     const seed = ulid();
 
     const fresh: Campaign = {
-      id: seed, createdAt: Date.now(), tone, world, worldGenerated: generated,
+      id: seed, createdAt: Date.now(), tone, lines: safetyLines, world, worldGenerated: generated,
       pc: { build, state: initialState(build) },
-      companions: pickCompanions(seed, 2).map((card) => ({ card })),
+      companions: pickCompanions(seed, 2).map((card) => ({ card, bond: 2 })),
       scene: `${world.openingLocation}. ${world.openingScene}`,
       // The model sometimes fills `hook` with the whole opening scene, which
       // would print the same paragraph twice. Only show the hook when it is
@@ -107,6 +123,8 @@ export function PlayClient() {
         { id: ulid(), kind: 'scene', text: cleanProse(world.openingScene), at: Date.now() },
       ],
       seed, rollCount: 0,
+      combat: null, foes: [],
+      codex: [], chronicle: { entries: [] },
     };
     setPending(fresh);
     setStatus('The others are already here');
@@ -169,10 +187,30 @@ export function PlayClient() {
         const pcNow = opened.order.find((o) => o.id === 'pc');
         if (pcNow) setCampaign((p) => (p ? { ...p, pc: { ...p.pc, state: { ...p.pc.state, currentHp: pcNow.hp } } } : p));
       } else if (after) {
-        await maybeCompanionSpeaks(after, action, {
-          onBeat: pushBeat, onNarrationChunk: patchNarration, onStatus: setStatus,
-        });
+        const handlers = { onBeat: pushBeat, onNarrationChunk: patchNarration, onStatus: setStatus };
+        const said = await maybeCompanionSpeaks(after, action, handlers);
+        if (said) {
+          // Disagreement has to cost something or it is decoration.
+          const { companions, left } = applyStance(campaignRef.current ?? after, said.id, said.stance);
+          setCampaign((p) => (p ? { ...p, companions } : p));
+          if (left) {
+            pushBeat({
+              id: ulid(), kind: 'system', at: Date.now(),
+              text: `${left} has had enough and walks away.`,
+            });
+          }
+        }
+        const latest = campaignRef.current;
+        if (latest) await maybeBanter(latest, handlers);
       }
+
+      // Fold the beat into memory. Deliberately not awaited inside the busy
+      // state: the player already has their narration, so this costs them
+      // nothing, and if it fails the campaign just remembers a little less.
+      const consequence = adjudication.successMeans || adjudication.failureMeans;
+      void rememberBeat(campaignRef.current ?? c, action, consequence).then((mem) => {
+        if (mem) setCampaign((p) => (p ? { ...p, ...mem } : p));
+      });
     } finally {
       setBusy(false);
       setStatus(null);
@@ -193,18 +231,48 @@ export function PlayClient() {
       if (pc) setCampaign((p) => (p ? { ...p, pc: { ...p.pc, state: { ...p.pc.state, currentHp: pc.hp } } } : p));
 
       if (next.over) {
-        pushBeat({
-          id: ulid(), kind: 'combat', at: Date.now(),
-          text: next.outcome === 'victory'
-            ? `The fight is over. ${next.xpAwarded} XP.`
-            : 'You are down. Someone drags you out of it.',
-        });
+        if (next.outcome === 'victory' && next.xpAwarded > 0) {
+          const { build, levelUp } = awardXp(c.pc.build, next.xpAwarded);
+          setCampaign((p) => (p ? { ...p, pc: { ...p.pc, build } } : p));
+          pushBeat({
+            id: ulid(), kind: 'combat', at: Date.now(),
+            text: `The fight is over. ${next.xpAwarded} XP.`,
+          });
+          if (levelUp) {
+            pushBeat({
+              id: ulid(), kind: 'system', at: Date.now(),
+              text: `Level ${levelUp.to}. Maximum hit points up by ${levelUp.hpGain}.`,
+            });
+          }
+        } else {
+          pushBeat({
+            id: ulid(), kind: 'combat', at: Date.now(),
+            text: 'You are down. Someone drags you out of it.',
+          });
+        }
         setCombat(null);
         setFoes([]);
       }
     } finally {
       setBusy(false);
       setStatus(null);
+    }
+  }
+
+  function rest(kind: 'short' | 'long') {
+    const c = campaignRef.current;
+    if (!c || busy || c.combat) return;
+    const r = kind === 'short'
+      ? shortRest(c.pc.build, c.pc.state, `${c.seed}:${c.beats.length}`, c.pc.state.hitDiceRemaining)
+      : longRest(c.pc.build, c.pc.state);
+
+    setCampaign((p) => (p ? { ...p, pc: { ...p.pc, state: r.state } } : p));
+    pushBeat({
+      id: ulid(), kind: 'combat', at: Date.now(),
+      text: `${r.note}${r.healed > 0 ? ` You recover ${r.healed} hit points.` : ''}`,
+    });
+    for (const dice of r.rolls) {
+      pushBeat({ id: ulid(), kind: 'roll', text: 'Hit Die', dice, at: Date.now() });
     }
   }
 
@@ -270,6 +338,20 @@ export function PlayClient() {
           <label className="field-label" style={{ marginTop: '1.5rem' }}>What kind of story?</label>
           <textarea rows={3} value={tone} onChange={(e) => setTone(e.target.value)} />
 
+          <label className="field-label" style={{ marginTop: '1.25rem' }}>
+            Anything you would rather not see?
+          </label>
+          <textarea
+            rows={2}
+            value={safetyLines}
+            placeholder="Left blank, nothing is excluded. For example: harm to animals, body horror."
+            onChange={(e) => setSafetyLines(e.target.value)}
+          />
+          <p className="meta-quiet" style={{ marginTop: '0.4rem' }}>
+            Whatever you put here is given to the Dungeon Master as a rule before it
+            writes, not filtered out afterwards.
+          </p>
+
           <button
             className="btn btn-primary"
             style={{ marginTop: '1rem', width: '100%' }}
@@ -309,6 +391,14 @@ export function PlayClient() {
         <Link href="/" className="label label-strong" style={{ textDecoration: 'none' }}>dnthey</Link>
         <span className="meta-quiet hide-compact">{campaign.world.realmName}</span>
         <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
+          <button className="btn btn-quiet" disabled={busy || !!combat} onClick={() => rest('short')}
+            data-hint="Short rest: one hour. Spend your Hit Dice to heal.">
+            Short rest
+          </button>
+          <button className="btn btn-quiet" disabled={busy || !!combat} onClick={() => rest('long')}
+            data-hint="Long rest: eight hours. All hit points back, half your Hit Dice, one level of exhaustion gone.">
+            Long rest
+          </button>
           <button
             className="btn btn-quiet"
             onClick={() => { if (confirm('Abandon this campaign and start over?')) { clearCampaign(); setCampaign(null); setPhase('idle'); } }}
@@ -342,12 +432,22 @@ export function PlayClient() {
             </div>
           </div>
 
-          {campaign.companions.map(({ card }) => (
-            <div key={card.id} className="panel" style={{ padding: '0.8rem', display: 'flex', gap: '0.65rem', alignItems: 'center' }}>
+          {campaign.companions.filter((c) => !c.gone).map(({ card, bond, stance }) => (
+            <div key={card.id} className="panel companion-row">
               <Art className="rail-portrait" src={`/assets/classart/${card.portraitId}`} alt="" width={384} height={384} sizes="48px" />
-              <div style={{ minWidth: 0 }}>
+              <div style={{ minWidth: 0, flex: 1 }}>
                 <p className="card-title" style={{ fontSize: 'var(--text-sm)' }}>{card.name}</p>
                 <p className="meta-quiet">{card.species} {card.klass}</p>
+                <span
+                  className="bond"
+                  title={`Trust ${bond} of 5${stance ? `. Last reaction: ${stance}` : ''}`}
+                  data-hint={`Trust: how much ${card.name} is willing to follow your lead. It rises when they agree with you and falls when you overrule them. At zero they leave.`}
+                >
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <span key={i} className="bond__pip" data-on={i < bond} />
+                  ))}
+                  <span className="sr-only">Trust {bond} of 5</span>
+                </span>
               </div>
             </div>
           ))}
@@ -388,6 +488,11 @@ function Stat({ label, v }: { label: string; v: string | number }) {
 
 function BeatView({ beat }: { beat: Beat }) {
   if (beat.kind === 'roll' && beat.roll) return <DiceRoll roll={beat.roll} />;
+  if (beat.kind === 'roll' && beat.dice) {
+    const faces = beat.dice.dice.map((d) => d.value).join(' + ');
+    const mods = beat.dice.modifiers.map((m) => `${m.value >= 0 ? '+' : ''}${m.value} ${m.label}`).join(' ');
+    return <p className="beat-combat">{beat.text}: {faces} {mods} = {beat.dice.total} healed.</p>;
+  }
   if (beat.kind === 'action') return <p className="beat-action">{beat.text}</p>;
   if (beat.kind === 'system') return <p className="beat-system label">{beat.text}</p>;
   // Combat lines are sentences carrying real numbers, so they are set as text

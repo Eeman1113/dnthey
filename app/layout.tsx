@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { IM_Fell_English, IM_Fell_English_SC, Libre_Caslon_Text } from 'next/font/google';
 import localFont from 'next/font/local';
 import './globals.css';
+import { RegisterSW } from '@/ui/components/RegisterSW';
 import { HintLayer } from '@/ui/components/HintLayer';
 
 /**

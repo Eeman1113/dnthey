@@ -77,7 +77,8 @@ export default function TitlePage() {
         <p className="meta-quiet" style={{ maxWidth: '42rem', fontSize: 'var(--text-xs)', lineHeight: 1.6 }}>
           Built on the System Reference Document 5.2.1, © Wizards of the Coast LLC,
           licensed under CC BY 4.0. Not affiliated with, endorsed, sponsored, or
-          specifically approved by Wizards of the Coast LLC.
+          specifically approved by Wizards of the Coast LLC.{' '}
+          <Link href="/about">About and licence</Link>.
         </p>
       </footer>
     </main>

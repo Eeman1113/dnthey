@@ -10,14 +10,30 @@
 import { chromeNanoProvider, isSupported } from '@/model/chrome-nano';
 import type { ModelSession, SamplingMode } from '@/model/types';
 
-export type Role = 'worldsmith' | 'narrator' | 'adjudicator' | 'companion';
+/**
+ * Only three live sessions.
+ *
+ * Every distinct session pays a create, measured at about 9.5s on this
+ * hardware, so one session per role per character meant a party of two cost
+ * thirty seconds of staring at a button. `aux` therefore serves every
+ * occasional job (loremaster, tactician, companions, banter) from a single
+ * warm session, with the role card passed in the message instead of the
+ * system prompt. That costs a few hundred tokens of a 9216 window per call
+ * and saves a create every time.
+ */
+export type Role = 'narrator' | 'adjudicator' | 'aux';
 
 const SAMPLING: Record<Role, SamplingMode> = {
-  worldsmith: 'most-creative',
   narrator: 'most-creative',
   adjudicator: 'most-predictable',
-  companion: 'balanced',
+  aux: 'balanced',
 };
+
+/** The one shared system prompt for occasional work. */
+export const AUX_SYSTEM =
+  'You do one small job at a time for a Dungeons and Dragons game. ' +
+  'Each message tells you the job and gives you everything you need. ' +
+  'Follow it exactly and output only the required JSON.';
 
 const pool = new Map<string, Promise<ModelSession>>();
 
@@ -84,5 +100,30 @@ export async function* askProse(
 ): AsyncGenerator<string> {
   for await (const chunk of session.promptStreaming(prompt, { timeoutMs: 60_000 })) {
     yield chunk;
+  }
+}
+
+
+/**
+ * A disposable session for one occasional job.
+ *
+ * Cloned from the warm `aux` session, so it costs no create (measured at
+ * about 9.5s) but starts with an empty context. That matters twice over:
+ * a single shared session would accumulate every previous job's history
+ * until it overflowed the 9216 token window, and it would also leak role,
+ * answering as a companion while still primed as the worldsmith.
+ *
+ * Always destroyed, so a long session does not leak sessions.
+ */
+export async function withAux<T>(fn: (s: ModelSession) => Promise<T>): Promise<T | null> {
+  let clone: ModelSession | null = null;
+  try {
+    const base = await getSession('aux', AUX_SYSTEM);
+    clone = await base.clone();
+    return await fn(clone);
+  } catch {
+    return null;
+  } finally {
+    try { clone?.destroy(); } catch { /* already gone */ }
   }
 }

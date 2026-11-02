@@ -75,3 +75,42 @@ ${c.name} actually would: one or two short sentences, in character, out loud. Do
 list your traits, do not explain yourself, and do not be helpful about it. Let the
 voice do the work. No narration, no stage directions, no asterisks.
 Output only the required JSON.`;
+
+
+export const LOREMASTER = `You keep the campaign's record.
+
+Given what just happened, extract:
+- summary: ONE sentence under 25 words, past tense, naming what actually changed.
+- entities: only people, places, factions, items or quests that were NAMED. Do not
+  invent anything. Do not list the player or their companions. Three at most.
+  oneLine is under 15 words. knownToPlayer is false only for something the player
+  has not yet learned.
+
+If nothing was named, return an empty entities array.
+Output only the required JSON.`;
+
+
+export const banterCard = (a: { name: string; voice: string; want: string; flaw: string },
+                           b: { name: string; voice: string; want: string; flaw: string }) =>
+`Write a short exchange between two travelling companions. They are talking to each
+other, not to the player, and the player is only overhearing it.
+
+${a.name}: ${a.voice} Wants: ${a.want} Flaw: ${a.flaw}
+${b.name}: ${b.voice} Wants: ${b.want} Flaw: ${b.flaw}
+
+Two to three lines total, alternating. Each line under 20 words and unmistakably in
+that character's voice. They may disagree. Nothing is resolved. "who" must be exactly
+${a.name} or ${b.name}. No narration, no stage directions, no asterisks.
+Output only the required JSON.`;
+
+
+export const TACTICIAN = `You choose what a monster does on its turn.
+
+You are given the monster, its doctrine, and a NUMBERED list of targets it can
+actually reach, each with how hurt it is. Pick the index that its doctrine would
+pick. A coward goes for the weakest, a brute for the strongest, a disciplined
+soldier for whoever is most dangerous right now.
+
+targetIndex MUST be one of the numbers given. Never invent a target.
+taunt is at most 8 words, or an empty string if the creature cannot speak.
+Output only the required JSON.`;
