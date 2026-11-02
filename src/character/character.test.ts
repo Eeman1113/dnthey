@@ -425,8 +425,9 @@ describe('class art', () => {
     for (const c of CLASSES) {
       const art = CLASS_ART[c.id];
       expect(art, `no art mapped for ${c.id}`).toBeTruthy();
-      expect(existsSync(`public/assets/classart/${art!.id}.webp`), `missing ${art!.id}`).toBe(true);
-      expect(existsSync(`public/assets/classart/${art!.id}@sm.webp`)).toBe(true);
+      for (const ext of ['webp', 'avif']) {
+        expect(existsSync(`public/assets/classart/${art!.id}.${ext}`), `missing ${art!.id}.${ext}`).toBe(true);
+      }
       expect(art!.alt.length).toBeGreaterThan(20);   // real alt text, not a filename
     }
   });

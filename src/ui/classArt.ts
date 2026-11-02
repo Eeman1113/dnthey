@@ -27,8 +27,8 @@ export function classArtSrc(classId: string): { src: string; thumb: string; alt:
   const a = CLASS_ART[classId];
   if (!a) return null;
   return {
-    src: `/assets/classart/${a.id}.webp`,
-    thumb: `/assets/classart/${a.id}@sm.webp`,
+    src: `/assets/classart/${a.id}`,
+    thumb: `/assets/classart/${a.id}@sm`,
     alt: a.alt,
   };
 }

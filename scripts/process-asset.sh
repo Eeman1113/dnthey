@@ -31,4 +31,4 @@ case "$CAT" in
   biomes)              LIMIT=184320 ;;
   *)                   LIMIT=40960 ;;
 esac
-[ "$BYTES" -le "$LIMIT" ] || echo "  WARNING: over budget ($((LIMIT/1024)) KB) — lower -q and reprocess" >&2
+[ "$BYTES" -le "$LIMIT" ] || echo "  WARNING: over budget ($((LIMIT/1024)) KB), lower -q and reprocess" >&2

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import Image from 'next/image';
+import { Art } from '@/ui/components/Art';
 import { ModelStatus } from '@/ui/components/ModelStatus';
 import { ThemeToggle } from '@/ui/components/ThemeToggle';
 
@@ -7,16 +7,14 @@ export default function TitlePage() {
   return (
     <main className="min-h-dvh flex flex-col" style={{ position: 'relative', isolation: 'isolate' }}>
       <div aria-hidden style={{ position: 'absolute', inset: 0, zIndex: -1, overflow: 'hidden' }}>
-        <Image
-          src="/assets/brand/title-backdrop.webp"
+        <Art
+          src="/assets/brand/title-backdrop"
           alt=""
-          fill
-          priority
-          fetchPriority="high"
+          width={1920}
+          height={1080}
           sizes="100vw"
-          placeholder="blur"
-          blurDataURL="data:image/webp;base64,UklGRjwAAABXRUJQVlA4IDAAAADQAQCdASoQAAkAA4BaJZQCdAEO+DLgAAD+9ZkwVBOAxR17/pcn9fg+JOfSTH/+jgA="
-          style={{ objectFit: 'cover', objectPosition: 'center 68%', opacity: 'var(--art-dim)' }}
+          priority
+          className="title-backdrop"
         />
         <div
           style={{

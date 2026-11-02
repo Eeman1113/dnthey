@@ -1,8 +1,8 @@
-# BUILD PROMPT — "dnthey": A fully-dynamic, LLM-run D&D platform powered by Chrome's built-in on-device model
+# BUILD PROMPT, "dnthey": A fully-dynamic, LLM-run D&D platform powered by Chrome's built-in on-device model
 
 > This document is the master prompt/spec. Hand it to a coding agent (or follow it yourself).
-> Everything in the game — world, NPCs, plot, encounters, when dice are rolled, what the other
-> party members decide — is generated at runtime by language models. Nothing is a hardcoded
+> Everything in the game, world, NPCs, plot, encounters, when dice are rolled, what the other
+> party members decide, is generated at runtime by language models. Nothing is a hardcoded
 > storyline. The *rules* are hardcoded; the *fiction* never is.
 
 ---
@@ -13,9 +13,9 @@ Build a browser-based Dungeons & Dragons platform where a single human player ru
 campaign with an **AI Dungeon Master** and a party of **AI player-characters**. The AI DM
 invents the setting, narrates, voices NPCs, decides when a check or save is needed and at what
 DC, builds and runs combat encounters, and awards rewards. The AI party members each have their
-own persona, voice, goals, and flaws, and make their own decisions in and out of combat — they
+own persona, voice, goals, and flaws, and make their own decisions in and out of combat, they
 are *players*, not sidekicks, and they can disagree with the human. All inference runs
-**on-device via Chrome's built-in Prompt API (`LanguageModel`, Gemini Nano)** — no API keys, no
+**on-device via Chrome's built-in Prompt API (`LanguageModel`, Gemini Nano)**, no API keys, no
 server, no per-token cost, works offline after the model downloads. All *mechanics* (dice,
 initiative, HP, slots, conditions, death saves, XP) run in a deterministic TypeScript rules
 engine that the model may *request* changes to but never directly mutate.
@@ -86,7 +86,7 @@ const status = await LanguageModel.availability({
 
 - `downloadable`/`downloading` → show a first-run screen with a real progress bar driven by the
   `monitor` option's `downloadprogress` event. Frame it as "Summoning the Dungeon Master"
-  (~ multi-GB one-time download). Do not block the character-creation UI behind it — let the
+  (~ multi-GB one-time download). Do not block the character-creation UI behind it, let the
   player build their character while the model downloads.
 - Hardware floor to surface honestly on the unsupported screen: Windows 10/11, macOS 13+,
   Linux, or ChromeOS (Chromebook Plus); **22 GB free storage**, **>4 GB VRAM**, 16 GB RAM,
@@ -108,7 +108,7 @@ const base = await LanguageModel.create({
 ```
 
 - **System prompt at create time, never in the first `prompt()` call.** Faster first token.
-- **Clone, don't re-create.** `base.clone()` preserves the system prompt and forks context —
+- **Clone, don't re-create.** `base.clone()` preserves the system prompt and forks context -
   the canonical pattern for spawning a per-scene Adjudicator or a one-shot classifier.
 - `session.append(messages)` to push context without generating.
 - `session.destroy()` the moment a role goes idle. Long-lived sessions: the DM Narrator and one
@@ -117,7 +117,7 @@ const base = await LanguageModel.create({
 - `samplingMode` per role: Worldsmith/Narrator → `most-creative`; Adjudicator/Resolver/
   Tactician/validators → `most-predictable`. Creativity in prose, determinism in rulings.
 
-### 2.3 Structured output — mandatory for every mechanical call
+### 2.3 Structured output, mandatory for every mechanical call
 
 Pass a JSON Schema as `responseConstraint`. Supported keywords in practice: `type`,
 `properties`, `items`, `required`, `enum`, `maxItems`, `pattern`, `additionalProperties`.
@@ -133,7 +133,7 @@ const parsed = AdjudicationZ.parse(JSON.parse(raw));   // Zod re-validates seman
 
 - Author schemas **once** in Zod, derive JSON Schema (`zod-to-json-schema`). Single source of
   truth for both the constraint and the runtime parse.
-- Do **not** put strict `maxLength` on prose fields — truncate client-side instead.
+- Do **not** put strict `maxLength` on prose fields, truncate client-side instead.
 - Never rely on "respond only in JSON" in natural language. Always the constraint.
 - Use `session.measureContextUsage(input, { responseConstraint })` to price a call before
   sending it; schemas cost context.
@@ -161,7 +161,7 @@ Budget every call explicitly and assert before sending.
   compaction pass and `clone()` a fresh session seeded with the new summary. Treat an
   overflowing session as disposable; the *log* is the real memory.
 
-### 2.5 Working with a small model — this changes the design, not just the prompts
+### 2.5 Working with a small model, this changes the design, not just the prompts
 
 Gemini Nano is a few-billion-parameter on-device model. It will not reliably run a 300-page
 rulebook in its head. Therefore:
@@ -171,7 +171,7 @@ rulebook in its head. Therefore:
 - **Closed-set choices beat open generation.** Wherever possible the engine supplies an `enum`
   and the model picks. `"which skill?" → enum of 18 skills`. `"which action?" → enum of the
   legal actions the engine computed`. This is what makes a small model feel competent.
-- **Rules are data, not model knowledge.** Ship the SRD as structured JSON; retrieve the 1–3
+- **Rules are data, not model knowledge.** Ship the SRD as structured JSON; retrieve the 1-3
   relevant rule snippets and paste them into the packet. Never ask the model to recall a rule.
 - **Pre-generate at idle.** While the player reads narration, speculatively generate the likely
   next beats, NPC lines, and encounter seeds. Cache keyed on normalized state hash.
@@ -194,7 +194,7 @@ foundation. It contains: the full rules glossary, conditions, combat, magic and 
 rules; **12 classes with one subclass each**; **9 species** (Dragonborn, Dwarf, Elf, Gnome,
 Goliath, Halfling, Human, Orc, Tiefling); **4 backgrounds**; **17 feats** (incl. 4 fighting
 styles); **339 spells**; **330 creatures**; **258 magic items**. Excluded: Artificer, Aasimar,
-Beholder, and other product-identity content — do not reference them anywhere.
+Beholder, and other product-identity content, do not reference them anywhere.
 
 **Required**: a visible attribution notice in-app (About screen + footer) crediting
 "System Reference Document 5.2.1, © Wizards of the Coast LLC, CC BY 4.0", and a clear
@@ -214,12 +214,12 @@ usesPerDay, multiattack}` so the engine can resolve monster turns without the mo
 
 ### 3.2 Mechanics the engine must implement correctly (2024 rules)
 
-**d20 Tests** — one unified concept: ability checks, attack rolls, saving throws.
-- Advantage/disadvantage: roll 2d20 take higher/lower; **never stacks** — any number of
+**d20 Tests**, one unified concept: ability checks, attack rolls, saving throws.
+- Advantage/disadvantage: roll 2d20 take higher/lower; **never stacks**, any number of
   sources of each cancel to a flat roll.
 - **Heroic Inspiration**: reroll a d20 and must use the new roll. Party holds it as a token;
   the DM agent may grant it for good play (an Intent the engine applies).
-- Proficiency bonus by level: +2 (1–4), +3 (5–8), +4 (9–12), +5 (13–16), +6 (17–20).
+- Proficiency bonus by level: +2 (1-4), +3 (5-8), +4 (9-12), +5 (13-16), +6 (17-20).
 - DC ladder for the Adjudicator to choose from (enum, not free-form):
   Very Easy 5, Easy 10, Medium 15, Hard 20, Very Hard 25, Nearly Impossible 30.
 - Passive score = 10 + modifiers (used for Perception/Insight so the DM can gate secrets
@@ -230,8 +230,8 @@ Alignment → Details.
 - Ability scores from **Background**, not species: +2/+1 to two of the background's three
   abilities, or +1/+1/+1 to all three.
 - Every character gets an **Origin Feat** from their background at level 1.
-- Species grant traits only — no ability bonuses, no languages. Languages: Common + 2 chosen.
-- Score generation: Standard Array `15,14,13,12,10,8`, Point Buy (27 points, 8–15 range), or
+- Species grant traits only, no ability bonuses, no languages. Languages: Common + 2 chosen.
+- Score generation: Standard Array `15,14,13,12,10,8`, Point Buy (27 points, 8-15 range), or
   roll `4d6` drop lowest ×6 (engine-rolled, logged).
 - Derived: AC, initiative mod, HP (max hit die + CON at L1), spell save DC = `8 + prof +
   ability mod`, spell attack = `prof + ability mod`, carrying capacity = `STR × 15`.
@@ -272,12 +272,12 @@ regain half total Hit Dice (round down, min 1), reset slots and most features, �
 **Progression**: support both **XP** (standard thresholds) and **Milestone** leveling, chosen
 at campaign creation. The DM agent proposes milestones; the engine awards.
 
-**Encounter building (2024 DMG math)** — the Encounter Director must obey this, it is not
+**Encounter building (2024 DMG math)**, the Encounter Director must obey this, it is not
 allowed to freehand difficulty:
 - **XP Budget per Character** table, cross-referenced by party level and chosen difficulty
   (Low / Moderate / High), then **multiplied by party size**.
   Anchors: L1 = 50/75/100 · L3 = 150/225/400 · L5 = 500/750/1100 · L10 = 1600/2300/3100
-  (ship the complete 1–20 table from SRD 5.2.1).
+  (ship the complete 1-20 table from SRD 5.2.1).
 - **No 2014-style multiplier.** Sum the raw XP of chosen creatures and compare directly
   against the budget. The budget is a **ceiling**, not a target floor.
 - The 2024 rules deliberately drop a fixed "encounters per day" quota. Instead, feed the
@@ -297,7 +297,7 @@ Each has a ≤700-token system prompt, a strict output schema, and a determinist
 | Role | Sampling | Called when | Outputs |
 |---|---|---|---|
 | **Worldsmith** | creative | Campaign creation only | Setting, tone, map regions, factions, pantheon, 3 quest seeds, central mystery, opening hook |
-| **Narrator** | creative | Every beat | Prose (2nd person, 80–180 words), sensory detail, NPC dialogue, 0 mechanical claims |
+| **Narrator** | creative | Every beat | Prose (2nd person, 80-180 words), sensory detail, NPC dialogue, 0 mechanical claims |
 | **Adjudicator** | predictable | Player/AI declares a non-combat action | `{needsRoll, checkType, ability, skill, dc, advantage, consequenceOfFailure, autoSucceed, autoFail}` |
 | **Resolver** | predictable | After a roll lands | `{outcomeTier, narration, stateIntents[]}` |
 | **Encounter Director** | balanced | Tension/pacing threshold or narrative trigger | `{shouldStartCombat, creatures[{id,count,reskin}], terrain, objective, enemyMotivation, retreatCondition, surprisedSide}` |
@@ -315,7 +315,7 @@ human player and their companions.
 VOICE: Second person for the human ("you"). Present tense. Concrete, sensory, specific.
 80-180 words. One vivid image beats three adjectives. Let NPCs speak in their own idiom.
 
-ABSOLUTE RULES — violating any of these breaks the game:
+ABSOLUTE RULES, violating any of these breaks the game:
 - You NEVER state a die result, a number of hit points, a DC, or whether an attack hit. The
   engine has already told you the outcome; narrate ONLY what you were given.
 - You NEVER decide what the human player does, says, thinks, or feels. You narrate the world
@@ -359,7 +359,7 @@ be on the ladder; `advantage` must be justified by an engine-visible fact or it'
 Fallback if the call fails twice: a deterministic heuristic table mapping action verbs to
 (ability, skill, DC 15).
 
-### 4.3 Monster Tactician — closed-set decision making
+### 4.3 Monster Tactician, closed-set decision making
 
 The engine computes, for the acting monster: every legal action, every valid target with
 distance/cover/condition/HP-percentage, available movement destinations, and recharge state.
@@ -367,7 +367,7 @@ The model picks an index. It cannot hallucinate an attack the monster doesn't ha
 
 Give each monster an **enemy doctrine** string from the Encounter Director (`"cowardly, targets
 the weakest, flees below half"`, `"fanatical, ignores pain, protects the altar"`) so tactics
-have personality without being unfair. The Director also sets a `retreatCondition` — the engine
+have personality without being unfair. The Director also sets a `retreatCondition`, the engine
 evaluates it and monsters *actually* surrender or flee. Enemies that never run make every fight
 feel like a video game.
 
@@ -378,7 +378,7 @@ feel like a video game.
 Each AI companion is a **persistent `LanguageModel` session** with a persona card in its system
 prompt. They are generated at campaign start by a **Companion Forge** pass (or hand-authored by
 the player, or rolled randomly) and they are mechanically *real* characters built by the same
-character-creation engine the human uses — same classes, same levels, same sheets, same death
+character-creation engine the human uses, same classes, same levels, same sheets, same death
 saves.
 
 ### 5.1 Persona card (lives in the system prompt, ≤ 600 tokens)
@@ -386,7 +386,7 @@ saves.
 ```
 NAME, pronouns, species, class/subclass, level
 APPEARANCE: one line
-VOICE: how they talk — vocabulary, rhythm, verbal tic, what they never say
+VOICE: how they talk, vocabulary, rhythm, verbal tic, what they never say
 WANT: the thing they are chasing (drives them to act)
 FEAR: the thing they avoid (drives them to refuse)
 FLAW: the way they reliably make things worse
@@ -413,11 +413,11 @@ const CompanionTurnZ = z.object({
 }).strict();
 ```
 
-### 5.3 Behavioral requirements — this is what makes solo play not feel lonely
+### 5.3 Behavioral requirements, this is what makes solo play not feel lonely
 
 - **They talk to each other, unprompted.** Between beats, run a lightweight **Banter**
   pass: pick two companions with narrative friction (opposing stances, clashing wants,
-  unresolved argument) and generate 2–4 lines of cross-talk. Rate-limit it; silence has value.
+  unresolved argument) and generate 2-4 lines of cross-talk. Rate-limit it; silence has value.
 - **They have opinions about the plan.** When the human declares a plan, each companion returns
   a `stanceTowardPlayerPlan`. `opposed` companions argue, and if the human overrules them, the
   engine drops Bond Level. A companion at Bond 0 can walk out of the party.
@@ -428,7 +428,7 @@ const CompanionTurnZ = z.object({
   because the engine hands them a legal-action list. A companion wizard will not cast a spell
   it doesn't have.
 - **They remember.** Each companion session accumulates its own compacted memory of what *it*
-  witnessed — not the omniscient log. Companions can be wrong about offscreen events.
+  witnessed, not the omniscient log. Companions can be wrong about offscreen events.
 - **They can die.** Permadeath or revivify-if-available, set at campaign creation. Death is
   engine-adjudicated, narrated by the Narrator, and mourned in the Banter pass for sessions
   afterward.
@@ -441,18 +441,18 @@ const CompanionTurnZ = z.object({
 
 The 9,216-token window makes this the second-hardest problem after rules fidelity.
 
-1. **Live Window** (verbatim) — the last ~12 beats. In the session context directly.
-2. **Rolling Chronicle** (compacted) — one 40–80 word entry per closed scene, written by the
+1. **Live Window** (verbatim), the last ~12 beats. In the session context directly.
+2. **Rolling Chronicle** (compacted), one 40-80 word entry per closed scene, written by the
    Loremaster at scene end. Chronological. Old entries get re-compacted into era summaries
    ("Act I: the party broke the Salt Cartel's hold on Arrowmouth").
-3. **Campaign Codex** (structured, persistent, IndexedDB) — typed entity records, never prose
+3. **Campaign Codex** (structured, persistent, IndexedDB), typed entity records, never prose
    blobs:
 
 ```ts
 type CodexEntity = {
   id: string; kind: 'npc'|'location'|'faction'|'item'|'quest'|'secret'|'creature'|'event';
   name: string; aliases: string[];
-  oneLine: string;                          // ≤ 25 words — this is what gets injected
+  oneLine: string;                          // ≤ 25 words, this is what gets injected
   facts: string[];                          // atomic, appendable, each with a sourceEventId
   relations: {to: string; type: string}[];
   tags: string[];                           // for retrieval + thematic encounter filtering
@@ -525,19 +525,19 @@ shopping."
 
 ## 8. Screens and UX
 
-1. **Title** — "New Campaign", "Continue" (campaign cards with act/level/last-played),
+1. **Title**, "New Campaign", "Continue" (campaign cards with act/level/last-played),
    "Compendium" (browse SRD), "Settings", "About/License". Model status pill in the corner
    (downloading / ready / unsupported) that pre-warms the session on hover.
-2. **Campaign Genesis** — a short wizard the Worldsmith turns into a world:
+2. **Campaign Genesis**, a short wizard the Worldsmith turns into a world:
    - Tone sliders: *grim ↔ heroic*, *gritty ↔ pulpy*, *low ↔ high magic*, *political ↔ dungeon*
    - Genre tags (multi-select, free-text allowed)
-   - Starting level, party size (1–5 companions), leveling mode, death rules
-   - **Content safety**: Lines (never appear) & Veils (fade to black) — free text, injected as
+   - Starting level, party size (1-5 companions), leveling mode, death rules
+   - **Content safety**: Lines (never appear) & Veils (fade to black), free text, injected as
      hard constraints into *every* narrative system prompt, plus an always-available **X-Card**
      button in play that retroactively vetoes the last beat and regenerates it.
    - Free-text "one thing you want to see in this campaign" → threaded into the quest seeds
    - Output: a one-page **Campaign Bible** card the player reads and can reroll per-section.
-3. **Character Creation** — two parallel paths, same output:
+3. **Character Creation**, two parallel paths, same output:
    - **Guided**: 2024 order (Class → Origin → Scores → Details), with live derived-stat preview,
      inline SRD rules tooltips, legality validation, and a "why this is good" hint.
    - **Describe It**: the player writes a paragraph ("a disgraced temple guard who drinks too
@@ -548,29 +548,29 @@ shopping."
    - Portrait: deterministic generated SVG/sigil from a seed (no image model on-device).
    - Backstory: LLM-expanded from the player's keywords, written into the Codex as
      `knownToPlayer: true` facts plus one `secret` the DM may use against them.
-4. **Companion Forge** — the party is generated with visible personas; the player may reroll
+4. **Companion Forge**, the party is generated with visible personas; the player may reroll
    any companion, lock the ones they like, edit any field, or author one from scratch.
-5. **Play View** — the core screen:
+5. **Play View**, the core screen:
    - Center: **narration log** (streamed; distinct typographic treatment for DM prose, NPC
      dialogue, companion speech, mechanical events, and dice results)
    - Bottom: free-text action input + engine-suggested action chips + "roll manually" toggle
    - Right rail: party panel (HP bars, conditions, concentration, slots, Bond level, a one-line
-     "mood") — click for the full sheet
+     "mood"), click for the full sheet
    - Left rail: scene card (location, time of day, present entities, active quest, tension meter)
    - Overlay on combat: initiative tracker, zone/battlefield diagram (abstract zones, not a
-     grid — zones are what a text engine can actually adjudicate), target picker, legal-action
+     grid, zones are what a text engine can actually adjudicate), target picker, legal-action
      palette, range/cover indicators
    - **Dice tray**: every roll animates with its full breakdown (`d20[14] + 3 DEX + 2 prof =
      19 vs DC 15 → SUCCESS`). Non-negotiable for trust.
    - **Journal** drawer: Chronicle, Codex (player-known only), quest log, session recaps
-6. **Rest & Level-Up** — hit-dice spending UI, slot reset, 2024-correct level-up flow with
+6. **Rest & Level-Up**, hit-dice spending UI, slot reset, 2024-correct level-up flow with
    companion choices shown for approval.
 7. **Dev HUD** (toggle): per-call latency, token usage vs window, which role was called, raw
    JSON in/out, validation failures and repairs, seed inspector, event-log scrubber with
    time-travel. Build this on day one; you cannot debug this system without it.
 
 **Feel**: dark parchment-and-ink, a real text face for prose (not UI sans), restrained gold
-accents, tactile dice. Streaming text should read like someone is *telling* you the story —
+accents, tactile dice. Streaming text should read like someone is *telling* you the story -
 render streamed chunks safely (never `innerHTML +=`; use a streaming-safe renderer and the
 Sanitizer API). Every AI output must be re-rollable, and an undo must walk back the event log.
 
@@ -596,7 +596,7 @@ Sanitizer API). Every AI output must be re-rollable, and an undo must walk back 
 ### 9.1 THE critical Next.js constraint: the model is browser-only
 
 `LanguageModel` is a **window API**. It does not exist in Node, in Server Components, in Route
-Handlers, in Middleware, or in Edge functions. This is not a limitation to work around — it
+Handlers, in Middleware, or in Edge functions. This is not a limitation to work around, it
 dictates the whole app topology:
 
 - **Every agent call, every session, the entire turn loop, and the whole rules engine run
@@ -646,7 +646,7 @@ A naive "write every event as it happens" design would burn the ops budget on a 
 and stall the game loop behind network latency. So:
 
 1. **IndexedDB is the authority during play.** Every event appends locally and renders
-   instantly. The game is fully playable offline — which matters, because the *model* works
+   instantly. The game is fully playable offline, which matters, because the *model* works
    offline.
 2. **Sync is batched and debounced.** Flush to `/api/campaigns/[id]/sync` on: scene close,
    combat end, level-up, rest, manual save, `visibilitychange → hidden`, and otherwise every
@@ -661,7 +661,7 @@ and stall the game loop behind network latency. So:
 5. **Keep the blobs out of Mongo.** Prompt/response transcripts, dev-HUD traces, and generated
    assets never go in the DB. Assets live in `/public` (§9.5); traces stay local.
 6. **Serverless connection hygiene**: a single cached `MongoClient` on `globalThis` (survives
-   HMR and warm lambda reuse) with `maxPoolSize: 10`. Never open a client per request — that is
+   HMR and warm lambda reuse) with `maxPoolSize: 10`. Never open a client per request, that is
    how you eat 500 connections.
 7. **Handle the 30-day auto-pause**: catch the resume error on first query and show "waking the
    archive…" with a retry, rather than a 500.
@@ -688,7 +688,7 @@ chronicle    { _id, campaignId, sceneIndex, entry, at }
 `characters: {campaignId:1}`.
 
 **Retrieval stays local.** The BM25 Codex index (§6) is built in the browser from synced codex
-docs — do not put retrieval behind a network call; it runs on every beat and must be instant.
+docs, do not put retrieval behind a network call; it runs on every beat and must be instant.
 
 **`.env.local`**: `MONGODB_URI`, `MONGODB_DB`. Never expose either to the client; nothing in
 `NEXT_PUBLIC_*` touches the database.
@@ -704,12 +704,12 @@ docs — do not put retrieval behind a network call; it runs on every beat and m
 
 ### 9.4 Motion design with anime.js v4
 
-anime.js is not decoration here — it is how a *text* game gets physicality. Import only what
+anime.js is not decoration here, it is how a *text* game gets physicality. Import only what
 you use (`import { animate, createTimeline, createScope, stagger, svg, utils } from 'animejs'`).
 
 **React integration is non-negotiable:** wrap every component's animations in `createScope`
 inside `useEffect`, keep the `scope` in a ref, and `scope.revert()` on cleanup. This scopes
-selectors to the component root and batch-reverts on unmount — without it, React Strict Mode's
+selectors to the component root and batch-reverts on unmount, without it, React Strict Mode's
 double-invoke and route transitions will leak and double-fire animations.
 
 ```ts
@@ -723,25 +723,25 @@ useEffect(() => {
 
 What to animate, in priority order:
 
-1. **The dice tray — the single most important animation in the app.** A d20 that tumbles,
+1. **The dice tray, the single most important animation in the app.** A d20 that tumbles,
    decelerates, and settles on the actual engine-rolled face, then the modifier chips flying in
    one by one (`stagger`) to assemble `14 + 3 + 2 = 19`, then a success/failure flare against
    the DC. Players trust numbers they watch land. Drive it from the roll's audit record so the
    animation is literally a visualization of the log, never a fake.
-2. **Narration streaming** — a word/clause reveal keyed to the model's stream chunks
+2. **Narration streaming**, a word/clause reveal keyed to the model's stream chunks
    (`stagger` over spans), not a fixed typewriter. It should feel like someone *telling* you
    the story, and it hides on-device latency as pacing rather than lag.
-3. **Initiative tracker** — the active-turn marker sliding along the order; HP bars easing;
+3. **Initiative tracker**, the active-turn marker sliding along the order; HP bars easing;
    damage numbers rising and fading; condition icons popping in with a spring.
-4. **Combat impact** — short, sharp: a hit shakes the target card, a crit flashes and overshoots,
+4. **Combat impact**, short, sharp: a hit shakes the target card, a crit flashes and overshoots,
    a miss is a quick lateral slip. Keep all under 400ms. Restraint reads as quality.
-5. **Scene transitions** — a parchment/ink wipe between scenes and screens; the Campaign Bible
+5. **Scene transitions**, a parchment/ink wipe between scenes and screens; the Campaign Bible
    card dealing itself out section by section as the Worldsmith streams.
-6. **SVG work** via anime.js's `svg` utilities — `createDrawable` line-draw for map region
+6. **SVG work** via anime.js's `svg` utilities, `createDrawable` line-draw for map region
    reveals, sigil/portrait generation strokes, and the tension meter's arc.
 
 Rules: respect `prefers-reduced-motion` (swap to instant state changes, never just shorten);
-never gate game state behind an animation completing — animations observe the event log, the
+never gate game state behind an animation completing, animations observe the event log, the
 log does not wait for them; keep per-beat total motion budget under ~1.2s so play stays brisk.
 
 ### 9.5 Asset pipeline: generated via chat.com, baked into `/public`
@@ -756,10 +756,10 @@ companions and NPCs at runtime, and we cannot render them on demand. So we pre-g
 (species / class-archetype / build / mood / age), falling back to a procedurally generated
 seed-sigil when nothing matches well. The player can reroll the match.
 
-**Style bible — one prompt prefix, prepended to every single asset request.** Consistency is
+**Style bible, one prompt prefix, prepended to every single asset request.** Consistency is
 the whole game here; 100 individually-beautiful images in 100 styles look like a scrapbook.
 
-> `STYLE: hand-inked fantasy manuscript illustration. Dark desaturated palette — charcoal
+> `STYLE: hand-inked fantasy manuscript illustration. Dark desaturated palette, charcoal
 > black, aged parchment cream, oxidised copper, muted blood red, one antique-gold accent.
 > Visible pen hatching and ink-wash shading. Matte, no gloss, no lens flare, no neon.
 > Slight paper grain. Composition centred and uncluttered. No text, no lettering, no borders,
@@ -792,13 +792,13 @@ review the result against the spec → accept or re-prompt once → download →
 (and AVIF for large backdrops) at the target size → write to `out` → flip `status` →
 commit. Rejected specs stay in the manifest with the reason, so nothing silently vanishes.
 
-**Post-processing is mandatory** — raw model output is never shipped:
+**Post-processing is mandatory**, raw model output is never shipped:
 cutout where `transparent` (flat-background trick + alpha), resize to exact 1×/2× targets,
 WebP/AVIF conversion, strip metadata, and `next/image` with explicit `width`/`height`
 everywhere so nothing shifts layout. Budget: portraits ≤ 60 KB, biome backdrops ≤ 180 KB,
 textures seamless and ≤ 40 KB. Total asset payload target **under 6 MB**, lazy-loaded by route.
 
-**What gets generated vs. what stays vector/procedural** — resist generating things that should
+**What gets generated vs. what stays vector/procedural**, resist generating things that should
 be code:
 
 | Generate (raster) | Keep as SVG / CSS / procedural |
@@ -811,7 +811,7 @@ be code:
 | Rarity card frames (6) | Map region outlines (anime.js `createDrawable`) |
 | Title backdrop, favicon, OG image | All UI chrome |
 
-**Pilot before scale.** Generate **two** assets first — one portrait and one biome backdrop —
+**Pilot before scale.** Generate **two** assets first, one portrait and one biome backdrop -
 and integrate them into a real screen before generating the remaining ~100. The style bible
 will need one or two revisions, and discovering that after 100 images is expensive.
 
@@ -846,26 +846,26 @@ library is reproducible, and keep the procedural-SVG fallbacks working so the ap
 
 ## 11. Build order (ship something playable at every step)
 
-1. **M0 — Spike**: feature-detect, download UX, one schema-constrained `prompt()` round trip,
+1. **M0, Spike**: feature-detect, download UX, one schema-constrained `prompt()` round trip,
    token/latency numbers measured on real hardware. *Validate the premise before building on it.*
-2. **M1 — Engine core**: dice + seeded RNG + d20 tests + character model + full 2024 character
+2. **M1, Engine core**: dice + seeded RNG + d20 tests + character model + full 2024 character
    creation (guided path) + sheet UI + SRD data loaded. No AI yet. Fully tested.
-3. **M2 — Narrative loop**: Worldsmith → Narrator → Adjudicator → Resolver, exploration/social
+3. **M2, Narrative loop**: Worldsmith → Narrator → Adjudicator → Resolver, exploration/social
    play only, one human PC, no companions. Dice tray + event log + Dev HUD.
-4. **M3 — Combat**: initiative, legal actions, attacks/saves/damage, conditions, death saves,
+4. **M3, Combat**: initiative, legal actions, attacks/saves/damage, conditions, death saves,
    Encounter Director + Monster Tactician, zone battlefield.
-5. **M4 — The party**: Companion Forge, companion turns, stances, banter, Bond levels.
-6. **M5 — Memory & persistence**: Codex, Chronicle, retrieval, compaction, contradiction judge,
+5. **M4, The party**: Companion Forge, companion turns, stances, banter, Bond levels.
+6. **M5, Memory & persistence**: Codex, Chronicle, retrieval, compaction, contradiction judge,
    save/load/export, session recaps.
-7. **M5.5 — Cloud sync & assets**: Atlas M0 wired, batched sync + snapshots, device-ID
+7. **M5.5, Cloud sync & assets**: Atlas M0 wired, batched sync + snapshots, device-ID
    identity, multi-device continuation; asset manifest authored, pilot assets integrated,
    library generated (§9.5).
-8. **M6 — Progression & polish**: rests, level-up, loot/XP, X-Card + Lines & Veils, pacing
+8. **M6, Progression & polish**: rests, level-up, loot/XP, X-Card + Lines & Veils, pacing
    tuning, accessibility, performance (pre-warm, pre-generate, cache), license/About screen.
 
 ---
 
-## 12. Acceptance criteria — "is it actually good?"
+## 12. Acceptance criteria, "is it actually good?"
 
 - A new player can go from Title to their first die roll in **under 3 minutes**.
 - A 90-minute solo session produces: a coherent world, at least one memorable NPC the player can
@@ -891,7 +891,7 @@ Multiplayer/multiple humans · grid-and-token tactical maps with precise geometr
 voice generation · homebrew content editor · non-SRD content · mobile layout (desktop-first;
 the model requires desktop-class hardware anyway) · real-time cross-device co-play (sync is
 sequential hand-off, not concurrent) · accounts/login (anonymous device ID only in v1) ·
-runtime image generation (§9.5 — all assets are build-time).
+runtime image generation (§9.5, all assets are build-time).
 
 ---
 
@@ -904,10 +904,10 @@ runtime image generation (§9.5 — all assets are build-time).
 
 ---
 
-### Appendix A — honest risks to design around
+### Appendix A, honest risks to design around
 
 - **Nano's capability ceiling is the main product risk.** Role decomposition, closed-set enums,
-  retrieved rules, and deterministic fallbacks are not optional polish — they are what make a
+  retrieved rules, and deterministic fallbacks are not optional polish, they are what make a
   small on-device model viable as a DM. Measure prose quality at M0 and decide then whether the
   Narrator (and only the Narrator) deserves an optional remote provider.
 - **The 9,216-token window** means long-campaign coherence lives entirely in the Codex and
@@ -921,13 +921,13 @@ runtime image generation (§9.5 — all assets are build-time).
 
 ---
 
-### Appendix B — measured on the dev machine (Chrome 156, macOS, 2026-11-02)
+### Appendix B, measured on the dev machine (Chrome 156, macOS, 2026-11-02)
 
 Verified live in the target browser before writing any code:
 
 - `'LanguageModel' in self` → **true**; `'Summarizer' in self` → **true**
 - `LanguageModel.availability({expectedInputs/Outputs: text/en})` → **`"available"`** (no download needed)
-- `LanguageModel.params()` → **does not exist on the web API** (extensions-only; do not call it —
+- `LanguageModel.params()` → **does not exist on the web API** (extensions-only; do not call it -
   use `samplingMode` on the web instead of `temperature`/`topK`)
 - `session.measureInputUsage()` → **does not exist**; the method is `measureContextUsage()`.
   Feature-detect both before calling either.
@@ -935,15 +935,15 @@ Verified live in the target browser before writing any code:
   gesture (`navigator.userActivation.hasBeenActive === true`), on a third-party origin
   (example.com) with no console diagnostics emitted.
 
-**Implication for M0 — treat this as the first thing to solve, before any feature work:**
+**Implication for M0, treat this as the first thing to solve, before any feature work:**
 `create()` is an unbounded-latency operation in practice. Therefore:
 
 1. Always pass an `AbortSignal` with a **timeout** to `create()` (e.g. 120s) and render an
-   honest "waking the Dungeon Master" state behind it — never a spinner with no exit.
+   honest "waking the Dungeon Master" state behind it, never a spinner with no exit.
 2. Pre-warm on the **Title screen**, not at first use, and treat session creation as a
    first-class app lifecycle phase with its own UI.
 3. Attach `monitor` on every `create()` and surface `downloadprogress` even when `availability`
-   reports `"available"` — the status and the readiness-to-serve are not the same thing.
+   reports `"available"`, the status and the readiness-to-serve are not the same thing.
 4. Re-run this spike on **localhost** and on the app's own origin; cold-start behaviour may be
    origin- or first-use-dependent. Record real numbers for `createMs` (cold/warm), `promptMs`,
    `contextWindow`, and `contextUsage` into a committed `docs/m0-measurements.md` before

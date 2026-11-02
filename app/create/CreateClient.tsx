@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { Art } from '@/ui/components/Art';
 import { ABILITIES, ABILITY_NAMES, SKILL_NAMES, formatMod, type Ability, type Skill } from '@/engine/types';
 import { CLASSES } from '@/data/srd/classes';
 import { SPECIES } from '@/data/srd/species';
@@ -270,14 +270,13 @@ function ClassStep({ build, patch, onNext }: StepProps) {
               {(() => {
                 const art = classArtSrc(c.id);
                 return art ? (
-                  <Image
+                  <Art
                     className="card-portrait"
                     src={art.src}
                     alt=""
                     width={384}
                     height={384}
                     sizes="(max-width: 899px) 44vw, 240px"
-                    loading="lazy"
                   />
                 ) : null;
               })()}
@@ -310,7 +309,7 @@ function ClassStep({ build, patch, onNext }: StepProps) {
             {(() => {
               const art = classArtSrc(cls.id);
               return art ? (
-                <Image className="select-bar__art" src={art.src} alt="" width={384} height={384} sizes="52px" />
+                <Art className="select-bar__art" src={art.src} alt="" width={384} height={384} sizes="52px" />
               ) : null;
             })()}
             <div className="select-bar__text">

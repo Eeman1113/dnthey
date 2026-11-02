@@ -6,7 +6,7 @@ Generating 6 portraits as one 3x2 grid instead of 6 separate requests is ~6x few
 round-trips AND enforces style consistency: the model paints them in one pass, so
 they genuinely match. This cuts them apart again.
 
-Uses `cwebp -crop x y w h`, which takes absolute top-left coordinates — unlike
+Uses `cwebp -crop x y w h`, which takes absolute top-left coordinates, unlike
 `sips --cropOffset`, which is relative to the image centre and easy to get wrong.
 
 A square crop out of a taller cell is biased UPWARD, because faces sit in the top
