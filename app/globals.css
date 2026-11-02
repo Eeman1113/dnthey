@@ -1,0 +1,262 @@
+@import "tailwindcss";
+
+@theme {
+  /* IM Fell (Oxford, 1600s) for display, Libre Caslon for reading, Yinit for drop caps.
+     Loaded and self-hosted by next/font in layout.tsx. */
+  --font-display: var(--f-display), "Iowan Old Style", Georgia, serif;
+  --font-fell:    var(--f-fell), "Iowan Old Style", Georgia, serif;
+  --font-prose:   var(--f-prose), "Iowan Old Style", Georgia, serif;
+  --font-ui:      var(--f-fell), "Iowan Old Style", Georgia, serif;
+  --font-initial: var(--f-initial), var(--f-display), Georgia, serif;
+  --font-mono:    ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+:root {
+  /* ---- DARK is the design's home key: candlelight on ink. Defined first so a
+     dark-preferring viewer never sees a light flash. ---- */
+  --ink-void:    #0b0b0e;
+  --ink-black:   #121216;
+  --ink-panel:   #17171c;
+  --ink-raised:  #1e1e25;
+  --ink-line:    #2b2b34;
+  --ink-line-lit:#3d3d49;
+
+  --parchment:   #e8e0cd;
+  --parchment-dim: #b9b2a2;
+  --parchment-faint: #6f6a5f;
+
+  --gold:        #c8a24a;
+  --gold-dim:    #8a6f33;
+  --copper:      #a4643a;
+  --blood:       #8c2f2f;
+  --blood-lit:   #c04a4a;
+  --verdigris:   #4a8a7b;
+
+  --success:     #6f9f5e;
+  --failure:     #a8484a;
+
+  --grain-opacity: 0.022;
+  --glow:        rgba(200,162,74,0.07);
+  --art-dim:     0.38;
+  /* Scrim over backdrop art. Must be a token: a hardcoded dark rgba stays dark in
+     light mode and buries the text. */
+  --scrim-rgb:   11, 11, 14;
+  color-scheme: dark;
+}
+
+/*
+  LIGHT: not an inversion. The dark theme is ink on a dark room; the light theme is
+  ink on aged paper. The same manuscript, lit differently. Roles stay identical so
+  every component keeps working without theme-specific CSS.
+*/
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --ink-void:    #e4dcc6;
+    --ink-black:   #ece5d2;
+    --ink-panel:   #f2ecdc;
+    --ink-raised:  #e8e0cb;
+    --ink-line:    #cfc4a6;
+    --ink-line-lit:#b3a582;
+
+    --parchment:   #231d14;
+    --parchment-dim: #4e4333;
+    --parchment-faint: #8a7c62;
+
+    --gold:        #8a6512;
+    --gold-dim:    #ab8a3c;
+    --copper:      #8a4a24;
+    --blood:       #8c2f2f;
+    --blood-lit:   #9c2626;
+    --verdigris:   #2f6b5c;
+
+    --success:     #41662f;
+    --failure:     #96292b;
+
+    --grain-opacity: 0.05;
+    --glow:        rgba(138,101,18,0.10);
+    /* The backdrop art is painted dark; on paper it works as a faint watermark. */
+    --art-dim:     0.10;
+    --scrim-rgb:   228, 220, 198;
+    color-scheme: light;
+  }
+}
+
+:root[data-theme="light"] {
+  --ink-void:    #e4dcc6;
+  --ink-black:   #ece5d2;
+  --ink-panel:   #f2ecdc;
+  --ink-raised:  #e8e0cb;
+  --ink-line:    #cfc4a6;
+  --ink-line-lit:#b3a582;
+
+  --parchment:   #231d14;
+  --parchment-dim: #4e4333;
+  --parchment-faint: #8a7c62;
+
+  --gold:        #8a6512;
+  --gold-dim:    #ab8a3c;
+  --copper:      #8a4a24;
+  --blood:       #8c2f2f;
+  --blood-lit:   #9c2626;
+  --verdigris:   #2f6b5c;
+
+  --success:     #41662f;
+  --failure:     #96292b;
+
+  --grain-opacity: 0.05;
+  --glow:        rgba(138,101,18,0.10);
+  --art-dim:     0.10;
+  --scrim-rgb:   228, 220, 198;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  background: var(--ink-void);
+  color: var(--parchment);
+  font-family: var(--font-ui);
+  margin: 0;
+  min-height: 100%;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  /* faint paper tooth so flat panels don't read as plastic */
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, var(--glow), transparent 70%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.022'/%3E%3C/svg%3E");
+}
+
+h1, h2, h3, .display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+.prose-ink { font-family: var(--font-prose); line-height: 1.7; color: var(--parchment); }
+
+/* Illuminated capital for the opening of a narration beat. */
+.dropcap::first-letter {
+  font-family: var(--font-initial);
+  font-size: 3.4em;
+  line-height: 0.82;
+  float: left;
+  margin: 0.06em 0.09em 0 0;
+  color: var(--gold);
+}
+
+/* IM Fell has no bold cut; emphasise with colour and letterspacing instead. */
+strong { font-weight: 400; color: var(--gold); }
+
+.panel {
+  background: linear-gradient(180deg, var(--ink-panel), var(--ink-black));
+  border: 1px solid var(--ink-line);
+  border-radius: 6px;
+}
+.panel-raised { background: var(--ink-raised); border: 1px solid var(--ink-line); border-radius: 6px; }
+
+.rule-gold {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-dim) 15%, var(--gold) 50%, var(--gold-dim) 85%, transparent);
+  opacity: 0.6;
+}
+
+.btn {
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.6rem 1.1rem;
+  border-radius: 4px;
+  border: 1px solid var(--ink-line-lit);
+  background: var(--ink-raised);
+  color: var(--parchment-dim);
+  cursor: pointer;
+  transition: border-color 140ms, color 140ms, background 140ms, transform 80ms;
+}
+.btn:hover:not(:disabled) { color: var(--parchment); border-color: var(--gold-dim); background: var(--ink-line); }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn:disabled { opacity: 0.38; cursor: not-allowed; }
+
+.btn-primary {
+  background: color-mix(in srgb, var(--gold) 12%, var(--ink-raised));
+  border-color: var(--gold-dim);
+  color: var(--gold);
+}
+.btn-primary:hover:not(:disabled) {
+  border-color: var(--gold);
+  background: color-mix(in srgb, var(--gold) 22%, var(--ink-raised));
+}
+
+.card-select {
+  background: var(--ink-panel);
+  border: 1px solid var(--ink-line);
+  border-radius: 6px;
+  padding: 0.85rem 1rem;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 140ms, background 140ms;
+}
+.card-select:hover { border-color: var(--ink-line-lit); background: var(--ink-raised); }
+.card-select[data-selected="true"] {
+  border-color: var(--gold);
+  background: linear-gradient(180deg, rgba(200,162,74,0.1), rgba(200,162,74,0.03));
+}
+
+.label-xs {
+  font-family: var(--font-display);
+  font-size: 0.75rem; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--parchment-faint);
+}
+
+.stat-num { font-family: var(--font-fell); font-variant-numeric: tabular-nums; letter-spacing: 0.01em; }
+
+input[type="text"], textarea, select {
+  background: var(--ink-black);
+  border: 1px solid var(--ink-line);
+  border-radius: 4px;
+  color: var(--parchment);
+  padding: 0.5rem 0.7rem;
+  font-family: inherit;
+  font-size: 0.9rem;
+  width: 100%;
+}
+input[type="text"]:focus, textarea:focus, select:focus {
+  outline: none; border-color: var(--gold-dim);
+}
+::placeholder { color: var(--parchment-faint); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/*
+  Loot rarity treatments. Deliberately CSS, not generated art: a raster frame
+  cannot wrap variable-height card content without 9-slicing, does not re-colour
+  for the light theme, and costs bytes. These scale to any size and theme for free.
+*/
+.rarity { border: 1px solid var(--rarity-ink); border-radius: 5px; position: relative; background: var(--ink-panel); }
+.rarity::before {
+  content: ''; position: absolute; inset: 3px; border-radius: 3px; pointer-events: none;
+  border: 1px solid color-mix(in srgb, var(--rarity-ink) 35%, transparent);
+}
+.rarity-label { color: var(--rarity-ink); }
+
+.rarity[data-rarity="common"]    { --rarity-ink: var(--parchment-faint); }
+.rarity[data-rarity="uncommon"]  { --rarity-ink: var(--verdigris); }
+.rarity[data-rarity="rare"]      { --rarity-ink: #4a7aa8; }
+.rarity[data-rarity="very-rare"] { --rarity-ink: #8a5ca8; }
+.rarity[data-rarity="legendary"] { --rarity-ink: var(--gold); }
+.rarity[data-rarity="artifact"]  { --rarity-ink: var(--blood-lit); }
+
+/* The top two tiers earn corner flourishes; the rest stay quiet. */
+.rarity[data-rarity="legendary"]::after,
+.rarity[data-rarity="artifact"]::after {
+  content: ''; position: absolute; inset: -1px; border-radius: 5px; pointer-events: none;
+  background:
+    linear-gradient(135deg, var(--rarity-ink) 0 10px, transparent 10px) top left / 14px 14px no-repeat,
+    linear-gradient(225deg, var(--rarity-ink) 0 10px, transparent 10px) top right / 14px 14px no-repeat,
+    linear-gradient(45deg,  var(--rarity-ink) 0 10px, transparent 10px) bottom left / 14px 14px no-repeat,
+    linear-gradient(315deg, var(--rarity-ink) 0 10px, transparent 10px) bottom right / 14px 14px no-repeat;
+  opacity: 0.55;
+}

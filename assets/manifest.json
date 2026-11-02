@@ -1,0 +1,565 @@
+{
+  "$comment": "Single source of truth for every generated asset. See BUILD_PROMPT.md \u00a79.5. Specs are authored BEFORE generation; status flips as each is produced. Resumable: generate the next 'todo'.",
+  "styleBible": "STYLE: hand-inked fantasy manuscript illustration. Dark desaturated palette - charcoal black, aged parchment cream, oxidised copper, muted blood red, one antique-gold accent. Visible pen hatching and ink-wash shading. Matte, no gloss, no lens flare, no neon. Slight paper grain. Composition centred and uncluttered. No text, no lettering, no borders, no watermark, no signature.",
+  "styleBibleVersion": "1.0.0",
+  "styleBibleNotes": "Validated 2026-11-02 and used unchanged across all 11 generation sheets. Do not revise without re-piloting; library consistency depends on this string being stable.",
+  "generation": {
+    "source": "chat.com (user's own account), driven via Chrome MCP",
+    "requestFormat": "'Generate one image. ' + styleBible + ' SUBJECT: ' + subjectPrompt + ' ' + framing + ' ' + aspectClause",
+    "variants": "Provider returns 2 variants; pick one, record which in sourceNote. Decline the A/B preference prompt via Skip rather than submitting a rating.",
+    "download": "Open the image lightbox, use its download button (NOT the share arrow \u2014 that offers public links). Allow ~30s; the file lands in ~/Downloads.",
+    "cutout": "For transparent:true specs, use the lightbox 'Remove BG' tool before downloading \u2014 better than post-hoc keying on inked art.",
+    "postProcess": "scripts/process-asset.sh <raw> <basename> <category>",
+    "contactSheets": "Assets are generated SIX-PER-REQUEST as a 3x2 contact sheet (or two-per-request as stacked wide panels for biomes), then cut apart by scripts/slice-sheet.py / slice-biomes.sh. This is ~6x fewer round-trips AND enforces style consistency, because the model paints the whole set in one pass. Portrait crops are biased upward (--bias 0.06): faces sit high in a 2:3 cell and a centred square crop decapitates them."
+  },
+  "categories": {
+    "portraits": {
+      "size": "512x512 + 128 thumb",
+      "budgetKB": 60,
+      "purpose": "Runtime tag-matched to AI companions and NPCs; see BUILD_PROMPT.md \u00a79.5"
+    },
+    "creatures": {
+      "size": "512x512 + 128 thumb",
+      "budgetKB": 60,
+      "purpose": "Common low-CR SRD bestiary art for the initiative tracker and encounter cards"
+    },
+    "biomes": {
+      "size": "1280x720 + 320 thumb",
+      "budgetKB": 180,
+      "purpose": "Scene-card backdrops, selected by location tags"
+    },
+    "textures": {
+      "size": "512x512 seamless",
+      "budgetKB": 40,
+      "purpose": "Parchment/leather surfaces for panels"
+    },
+    "frames": {
+      "size": "256x256",
+      "budgetKB": 40,
+      "purpose": "Loot card frames by rarity"
+    },
+    "brand": {
+      "size": "1200x630",
+      "budgetKB": 40,
+      "purpose": "Title backdrop, OG image, favicon source"
+    }
+  },
+  "matcher": {
+    "$comment": "How the runtime picks a portrait for a generated companion/NPC. No image model on-device, so selection replaces generation.",
+    "scoreFields": [
+      "species",
+      "archetype",
+      "build",
+      "age",
+      "mood"
+    ],
+    "weights": {
+      "species": 3,
+      "archetype": 2,
+      "build": 1,
+      "age": 1,
+      "mood": 1
+    },
+    "fallback": "procedural seeded SVG sigil when best score < 5",
+    "rerollable": true
+  },
+  "assets": [
+    {
+      "id": "portraits.dragonborn-fighter-red",
+      "category": "portraits",
+      "out": "public/assets/portraits/dragonborn-fighter-red.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "portraits.dragonborn-paladin-bronze",
+      "category": "portraits",
+      "out": "public/assets/portraits/dragonborn-paladin-bronze.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "portraits.dragonborn-warlock-green",
+      "category": "portraits",
+      "out": "public/assets/portraits/dragonborn-warlock-green.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "portraits.dwarf-cleric-braids",
+      "category": "portraits",
+      "out": "public/assets/portraits/dwarf-cleric-braids.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "portraits.dwarf-cleric-stern-01",
+      "category": "portraits",
+      "out": "public/assets/portraits/dwarf-cleric-stern-01.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "portraits.dwarf-fighter-scarred",
+      "category": "portraits",
+      "out": "public/assets/portraits/dwarf-fighter-scarred.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "portraits.dwarf-rogue-soot",
+      "category": "portraits",
+      "out": "public/assets/portraits/dwarf-rogue-soot.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "portraits.elf-bard-melancholy",
+      "category": "portraits",
+      "out": "public/assets/portraits/elf-bard-melancholy.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "portraits.elf-druid-antler",
+      "category": "portraits",
+      "out": "public/assets/portraits/elf-druid-antler.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "portraits.elf-fighter-cold",
+      "category": "portraits",
+      "out": "public/assets/portraits/elf-fighter-cold.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "portraits.elf-ranger-hooded",
+      "category": "portraits",
+      "out": "public/assets/portraits/elf-ranger-hooded.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "portraits.elf-rogue-blunt",
+      "category": "portraits",
+      "out": "public/assets/portraits/elf-rogue-blunt.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "portraits.elf-wizard-silver",
+      "category": "portraits",
+      "out": "public/assets/portraits/elf-wizard-silver.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "portraits.gnome-bard-moustache",
+      "category": "portraits",
+      "out": "public/assets/portraits/gnome-bard-moustache.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "portraits.gnome-druid-ancient",
+      "category": "portraits",
+      "out": "public/assets/portraits/gnome-druid-ancient.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "portraits.gnome-rogue-hooded",
+      "category": "portraits",
+      "out": "public/assets/portraits/gnome-rogue-hooded.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "portraits.gnome-wizard-spectacles",
+      "category": "portraits",
+      "out": "public/assets/portraits/gnome-wizard-spectacles.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "portraits.goliath-barbarian-roaring",
+      "category": "portraits",
+      "out": "public/assets/portraits/goliath-barbarian-roaring.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "portraits.goliath-cleric-stone",
+      "category": "portraits",
+      "out": "public/assets/portraits/goliath-cleric-stone.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "portraits.goliath-fighter-stone",
+      "category": "portraits",
+      "out": "public/assets/portraits/goliath-fighter-stone.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "portraits.halfling-druid-elder",
+      "category": "portraits",
+      "out": "public/assets/portraits/halfling-druid-elder.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "portraits.halfling-monk-calm",
+      "category": "portraits",
+      "out": "public/assets/portraits/halfling-monk-calm.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "portraits.halfling-rogue-scarred",
+      "category": "portraits",
+      "out": "public/assets/portraits/halfling-rogue-scarred.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "portraits.halfling-sorcerer-copper",
+      "category": "portraits",
+      "out": "public/assets/portraits/halfling-sorcerer-copper.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "portraits.human-bard-vain",
+      "category": "portraits",
+      "out": "public/assets/portraits/human-bard-vain.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "portraits.human-cleric-serene",
+      "category": "portraits",
+      "out": "public/assets/portraits/human-cleric-serene.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "portraits.human-monk-still",
+      "category": "portraits",
+      "out": "public/assets/portraits/human-monk-still.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "portraits.human-paladin-stern",
+      "category": "portraits",
+      "out": "public/assets/portraits/human-paladin-stern.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "portraits.human-rogue-hooded",
+      "category": "portraits",
+      "out": "public/assets/portraits/human-rogue-hooded.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "portraits.human-wizard-ancient",
+      "category": "portraits",
+      "out": "public/assets/portraits/human-wizard-ancient.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "portraits.orc-barbarian-painted",
+      "category": "portraits",
+      "out": "public/assets/portraits/orc-barbarian-painted.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "portraits.orc-druid-fetish",
+      "category": "portraits",
+      "out": "public/assets/portraits/orc-druid-fetish.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "portraits.orc-ranger-scarred",
+      "category": "portraits",
+      "out": "public/assets/portraits/orc-ranger-scarred.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "portraits.tiefling-bard-grinning",
+      "category": "portraits",
+      "out": "public/assets/portraits/tiefling-bard-grinning.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "portraits.tiefling-rogue-masked",
+      "category": "portraits",
+      "out": "public/assets/portraits/tiefling-rogue-masked.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "portraits.tiefling-sorcerer-violet",
+      "category": "portraits",
+      "out": "public/assets/portraits/tiefling-sorcerer-violet.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "portraits.tiefling-warlock-pale",
+      "category": "portraits",
+      "out": "public/assets/portraits/tiefling-warlock-pale.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "creatures.animated-armor",
+      "category": "creatures",
+      "out": "public/assets/creatures/animated-armor.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "creatures.bandit",
+      "category": "creatures",
+      "out": "public/assets/creatures/bandit.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "creatures.bugbear",
+      "category": "creatures",
+      "out": "public/assets/creatures/bugbear.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "creatures.cultist",
+      "category": "creatures",
+      "out": "public/assets/creatures/cultist.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "creatures.dire-wolf",
+      "category": "creatures",
+      "out": "public/assets/creatures/dire-wolf.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "creatures.ghoul",
+      "category": "creatures",
+      "out": "public/assets/creatures/ghoul.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "creatures.giant-boar",
+      "category": "creatures",
+      "out": "public/assets/creatures/giant-boar.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "creatures.giant-rat",
+      "category": "creatures",
+      "out": "public/assets/creatures/giant-rat.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "creatures.giant-spider",
+      "category": "creatures",
+      "out": "public/assets/creatures/giant-spider.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "creatures.gnoll",
+      "category": "creatures",
+      "out": "public/assets/creatures/gnoll.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "creatures.goblin",
+      "category": "creatures",
+      "out": "public/assets/creatures/goblin.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "creatures.harpy",
+      "category": "creatures",
+      "out": "public/assets/creatures/harpy.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "creatures.hobgoblin",
+      "category": "creatures",
+      "out": "public/assets/creatures/hobgoblin.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "creatures.kobold",
+      "category": "creatures",
+      "out": "public/assets/creatures/kobold.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "creatures.ogre",
+      "category": "creatures",
+      "out": "public/assets/creatures/ogre.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "creatures.orc",
+      "category": "creatures",
+      "out": "public/assets/creatures/orc.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "creatures.owlbear",
+      "category": "creatures",
+      "out": "public/assets/creatures/owlbear.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "creatures.skeleton",
+      "category": "creatures",
+      "out": "public/assets/creatures/skeleton.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "creatures.swarm-of-rats",
+      "category": "creatures",
+      "out": "public/assets/creatures/swarm-of-rats.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "creatures.troll",
+      "category": "creatures",
+      "out": "public/assets/creatures/troll.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "creatures.wight",
+      "category": "creatures",
+      "out": "public/assets/creatures/wight.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "creatures.wolf",
+      "category": "creatures",
+      "out": "public/assets/creatures/wolf.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "creatures.wraith",
+      "category": "creatures",
+      "out": "public/assets/creatures/wraith.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "creatures.zombie",
+      "category": "creatures",
+      "out": "public/assets/creatures/zombie.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "biomes.ancient-ruin",
+      "category": "biomes",
+      "out": "public/assets/biomes/ancient-ruin.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "biomes.city-street",
+      "category": "biomes",
+      "out": "public/assets/biomes/city-street.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "biomes.crypt",
+      "category": "biomes",
+      "out": "public/assets/biomes/crypt.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "biomes.deep-forest",
+      "category": "biomes",
+      "out": "public/assets/biomes/deep-forest.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "biomes.dungeon-corridor",
+      "category": "biomes",
+      "out": "public/assets/biomes/dungeon-corridor.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "biomes.keep-hall",
+      "category": "biomes",
+      "out": "public/assets/biomes/keep-hall.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "biomes.mountain-pass",
+      "category": "biomes",
+      "out": "public/assets/biomes/mountain-pass.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "biomes.open-road",
+      "category": "biomes",
+      "out": "public/assets/biomes/open-road.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "biomes.sea-coast",
+      "category": "biomes",
+      "out": "public/assets/biomes/sea-coast.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "biomes.swamp",
+      "category": "biomes",
+      "out": "public/assets/biomes/swamp.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "biomes.tavern-interior",
+      "category": "biomes",
+      "out": "public/assets/biomes/tavern-interior.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "biomes.underdark",
+      "category": "biomes",
+      "out": "public/assets/biomes/underdark.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "textures.iron",
+      "category": "textures",
+      "out": "public/assets/textures/iron.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "textures.leather",
+      "category": "textures",
+      "out": "public/assets/textures/leather.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "textures.oak",
+      "category": "textures",
+      "out": "public/assets/textures/oak.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "textures.parchment",
+      "category": "textures",
+      "out": "public/assets/textures/parchment.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "textures.stone",
+      "category": "textures",
+      "out": "public/assets/textures/stone.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "textures.vellum",
+      "category": "textures",
+      "out": "public/assets/textures/vellum.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "brand.og",
+      "category": "brand",
+      "out": "public/assets/brand/og.webp",
+      "status": "accepted"
+    },
+    {
+      "id": "brand.title-backdrop",
+      "category": "brand",
+      "out": "public/assets/brand/title-backdrop.webp",
+      "status": "accepted"
+    }
+  ],
+  "todoPlan": {
+    "$comment": "All planned categories generated. Rarity frames were deliberately DROPPED as raster and reimplemented as CSS (.rarity in globals.css): a square raster frame cannot wrap variable-height card content without 9-slicing, does not re-colour for the light theme, and costs bytes for no gain.",
+    "remaining": "none"
+  },
+  "counts": {
+    "portraits": 37,
+    "creatures": 24,
+    "biomes": 12,
+    "textures": 6,
+    "brand": 2
+  }
+}

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- A d20 seen face-on: the shape every player recognises at 16px.
+       Flat gold on ink so it reads at favicon size without detail mush. -->
+  <rect width="64" height="64" rx="13" fill="#121216"/>
+  <g transform="translate(32 33)">
+    <!-- outer icosahedron silhouette -->
+    <path d="M0 -24 L20.8 -12 L20.8 12 L0 24 L-20.8 12 L-20.8 -12 Z"
+          fill="#c8a24a" stroke="#c8a24a" stroke-width="2" stroke-linejoin="round"/>
+    <!-- the three visible side facets, darkened so the solid reads as 3D -->
+    <path d="M0 -24 L20.8 -12 L0 -8 Z"   fill="#8a6f33"/>
+    <path d="M0 -24 L-20.8 -12 L0 -8 Z"  fill="#a98736"/>
+    <path d="M20.8 -12 L20.8 12 L0 -8 Z" fill="#6f5728"/>
+    <path d="M-20.8 -12 L-20.8 12 L0 -8 Z" fill="#96762e"/>
+    <path d="M20.8 12 L0 24 L0 -8 Z"     fill="#7d632c"/>
+    <path d="M-20.8 12 L0 24 L0 -8 Z"    fill="#a07e31"/>
+    <!-- the up-facing triangle, left bright: this is where the number sits -->
+    <path d="M0 -8 L13.5 9 L-13.5 9 Z" fill="#e8d8a8" stroke="#121216" stroke-width="1.6" stroke-linejoin="round"/>
+    <text x="0" y="6.5" text-anchor="middle"
+          font-family="Georgia, 'Times New Roman', serif" font-size="13" font-weight="700" fill="#121216">20</text>
+  </g>
+</svg>

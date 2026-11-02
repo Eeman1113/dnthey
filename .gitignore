@@ -1,0 +1,10 @@
+node_modules/
+.next/
+.env.local
+*.tsbuildinfo
+next-env.d.ts
+.DS_Store
+
+# Generation originals: large, reproducible from assets/manifest.json.
+# The shipped WebP files in public/assets ARE committed.
+assets/raw/
