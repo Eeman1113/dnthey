@@ -51,11 +51,13 @@ export function ThemeToggle() {
             aria-label={o.label}
             title={o.label}
             onClick={() => choose(o.id)}
+            /* Size lives in CSS (.theme-btn) so touch can widen these to 44pt
+               without disturbing the 30x28 desktop metrics. */
+            className="theme-btn"
             style={{
               fontFamily: 'var(--font-ui)',
               fontSize: '0.875rem',
               lineHeight: 1,
-              width: 30, height: 28,
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
               borderRadius: 6,
               border: 'none',

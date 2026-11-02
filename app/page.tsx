@@ -5,7 +5,7 @@ import { ThemeToggle } from '@/ui/components/ThemeToggle';
 
 export default function TitlePage() {
   return (
-    <main className="min-h-screen flex flex-col" style={{ position: 'relative', isolation: 'isolate' }}>
+    <main className="min-h-dvh flex flex-col" style={{ position: 'relative', isolation: 'isolate' }}>
       <div aria-hidden style={{ position: 'absolute', inset: 0, zIndex: -1, overflow: 'hidden' }}>
         <Image
           src="/assets/brand/title-backdrop.webp"
@@ -25,18 +25,21 @@ export default function TitlePage() {
         />
       </div>
 
-      <header className="flex items-center justify-between px-8 py-5">
-        <span className="label label-strong">dnthey</span>
-        <div className="flex items-center gap-5">
-          <ModelStatus />
-          <ThemeToggle />
-        </div>
+      {/* One row on desktop. On a phone the model-status line — which can read
+          "Dungeon Master must be summoned" — wraps to its own row rather than
+          squeezing the brand and the theme control. */}
+      <header className="title-bar gutter">
+        <span className="label label-strong title-bar__brand">dnthey</span>
+        <div className="title-bar__toggle"><ThemeToggle /></div>
+        <div className="title-bar__status"><ModelStatus /></div>
       </header>
 
-      <div className="flex-1 flex flex-col items-center justify-center px-6 -mt-10 text-center">
+      <div className="flex-1 flex flex-col items-center justify-center gutter py-8 text-center hero-lift">
         <p className="label" style={{ marginBottom: '1.25rem' }}>A dungeon that runs itself</p>
 
-        <h1 style={{ fontSize: 'clamp(2.75rem, 8.5vw, 5.5rem)', lineHeight: 0.98, maxWidth: '16ch' }}>
+        {/* The lower bound drops to 2.25rem so "Is Always Set" still fits on one
+            line inside a 320px viewport without a horizontal scroll. */}
+        <h1 style={{ fontSize: 'clamp(2.25rem, 8.5vw, 5.5rem)', lineHeight: 0.98, maxWidth: '16ch' }}>
           The Table<br />Is Always Set
         </h1>
 
@@ -56,7 +59,7 @@ export default function TitlePage() {
           are players too — they argue, they improvise, and they can die.
         </p>
 
-        <div className="flex gap-3 mt-9">
+        <div className="cta-row mt-9">
           <Link href="/create" className="btn btn-primary" style={{ padding: '0.6rem 1.35rem' }}>
             Begin a new campaign
           </Link>
@@ -64,7 +67,7 @@ export default function TitlePage() {
         </div>
       </div>
 
-      <footer className="px-8 py-6">
+      <footer className="gutter py-6">
         <p className="meta-quiet" style={{ maxWidth: '42rem', fontSize: '0.75rem', lineHeight: 1.6 }}>
           Built on the System Reference Document 5.2.1, © Wizards of the Coast LLC,
           licensed under CC BY 4.0. Not affiliated with, endorsed, sponsored, or

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { IM_Fell_English, IM_Fell_English_SC, Libre_Caslon_Text } from 'next/font/google';
 import localFont from 'next/font/local';
 import './globals.css';
+import { HintLayer } from '@/ui/components/HintLayer';
 
 /**
  * Typography: 17th-century types. IM Fell was cut for the Oxford University Press
@@ -38,6 +39,11 @@ export const metadata: Metadata = {
 };
 
 export const viewport = {
+  // `cover` is what makes env(safe-area-inset-*) report real numbers, so the
+  // bottom dock and the page gutters can clear the home indicator and the
+  // rounded corners (layout.md › Guides and safe areas). Zoom is deliberately
+  // left unrestricted — no maximumScale, no userScalable.
+  viewportFit: 'cover' as const,
   // Tells the browser chrome (address bar, scrollbars) which theme is active.
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#e4dcc6' },
@@ -62,7 +68,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <HintLayer />
+      </body>
     </html>
   );
 }

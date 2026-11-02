@@ -42,27 +42,29 @@ export function Sheet({ build }: { build: CharacterBuild }) {
 
       <hr className="rule" style={{ margin: '1rem 0' }} />
 
-      <div className="grid grid-cols-4 gap-2 mb-4">
+      <div className="sheet-stats mb-4">
         <Stat label="Armor Class" value={d.armorClass} note={d.armorNote} />
         <Stat label="Hit Points" value={d.maxHp} note={`d${d.hitDie} hit die`} />
         <Stat label="Initiative" value={formatMod(d.initiative)} />
         <Stat label="Speed" value={`${d.speed} ft`} />
       </div>
 
-      <div className="grid grid-cols-6 gap-1.5 mb-5">
+      <div className="sheet-abilities mb-5">
         {ABILITIES.map((a) => (
           <div
             key={a}
             className="panel-raised"
             style={{ padding: '0.5rem 0.25rem', textAlign: 'center' }}
           >
-            <div
-              className="label"
+            <button
+              type="button"
+              className="label hint-term"
               style={{ fontSize: '0.75rem', letterSpacing: '0.07em' }}
               data-hint={ABILITY_HINT[a]}
+              aria-label={`${ABILITY_NAMES[a]}. ${ABILITY_HINT[a]}`}
             >
               {a}
-            </div>
+            </button>
             <div
               className="stat-num"
               style={{ fontSize: '1.5rem', color: 'var(--content-1)', lineHeight: 1.2 }}
@@ -70,30 +72,36 @@ export function Sheet({ build }: { build: CharacterBuild }) {
               {formatMod(d.mods[a])}
             </div>
             <div className="meta-quiet" style={{ fontSize: '0.75rem' }}>{d.scores[a]}</div>
-            <div
-              className="meta-quiet"
+            <button
+              type="button"
+              className="meta-quiet hint-term"
               style={{
                 fontSize: '0.75rem',
                 marginTop: '0.2rem',
                 color: d.saves[a].proficient ? 'var(--rubric)' : 'var(--content-3)',
               }}
-              data-hint={d.saves[a].proficient
-                ? `${SAVE_HINT} You are proficient in ${ABILITY_NAMES[a]} saves.`
-                : `${ABILITY_NAMES[a]} saving throw. You are not proficient, so no proficiency bonus is added.`}
+              data-hint={saveHint(a, d.saves[a].proficient)}
+              aria-label={`${ABILITY_NAMES[a]} saving throw ${formatMod(d.saves[a].mod)}. ${saveHint(a, d.saves[a].proficient)}`}
             >
-              {d.saves[a].proficient ? '◆' : '·'} {formatMod(d.saves[a].mod)}
-            </div>
+              <span aria-hidden>{d.saves[a].proficient ? '◆' : '·'} </span>
+              <span className="stat-num">{formatMod(d.saves[a].mod)}</span>
+            </button>
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-2 gap-5">
+      <div className="sheet-cols">
         <section>
           <h3 className="label" style={{ marginBottom: '0.5rem' }}>
             Skills ·{' '}
-            <span data-hint={PROFICIENCY_HINT} style={{ borderBottom: '1px dashed var(--hairline-lit)', cursor: 'help' }}>
+            <button
+              type="button"
+              className="hint-term"
+              data-hint={PROFICIENCY_HINT}
+              aria-label={`Proficiency bonus ${formatMod(d.proficiencyBonus)}. ${PROFICIENCY_HINT}`}
+            >
               prof {formatMod(d.proficiencyBonus)}
-            </span>
+            </button>
           </h3>
           <ul>
             {SKILLS.map((s) => {
@@ -108,12 +116,14 @@ export function Sheet({ build }: { build: CharacterBuild }) {
                     color: sk.proficient ? 'var(--content-1)' : 'var(--content-2)',
                   }}
                 >
-                  <span>
+                  <span
+                    data-hint={sk.expertise ? EXPERTISE_HINT : sk.proficient
+                      ? 'Proficient: your proficiency bonus is added to this skill.'
+                      : undefined}
+                    style={{ cursor: sk.proficient ? 'help' : undefined }}
+                  >
                     <span
                       aria-hidden
-                      data-hint={sk.expertise ? EXPERTISE_HINT : sk.proficient
-                        ? 'Proficient: your proficiency bonus is added to this skill.'
-                        : undefined}
                       style={{
                         display: 'inline-block', width: '0.9rem',
                         color: sk.expertise ? 'var(--rubric)' : 'var(--content-3)',
@@ -123,6 +133,7 @@ export function Sheet({ build }: { build: CharacterBuild }) {
                     </span>
                     {SKILL_NAMES[s]}
                     {sk.expertise && <span className="sr-only"> (expertise)</span>}
+                    {!sk.expertise && sk.proficient && <span className="sr-only"> (proficient)</span>}
                   </span>
                   <span className="stat-num" style={{ fontSize: '0.875rem' }}>{formatMod(sk.mod)}</span>
                 </li>
@@ -197,6 +208,13 @@ export function Sheet({ build }: { build: CharacterBuild }) {
       </div>
     </div>
   );
+}
+
+/** Save-throw help, shared by the visible hint and the screen-reader label. */
+function saveHint(a: (typeof ABILITIES)[number], proficient: boolean) {
+  return proficient
+    ? `${SAVE_HINT} You are proficient in ${ABILITY_NAMES[a]} saves.`
+    : `${ABILITY_NAMES[a]} saving throw. You are not proficient, so no proficiency bonus is added.`;
 }
 
 function Group({ title, children }: { title: string; children: React.ReactNode }) {

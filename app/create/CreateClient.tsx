@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ABILITIES, ABILITY_NAMES, SKILL_NAMES, formatMod, type Ability, type Skill } from '@/engine/types';
 import { CLASSES } from '@/data/srd/classes';
@@ -16,6 +16,7 @@ import { rollAbilityScores } from '@/engine/dice';
 import { Rng } from '@/engine/rng';
 import type { CharacterBuild } from '@/character/types';
 import { Sheet } from '@/ui/components/Sheet';
+import { derive } from '@/character/derive';
 import {
   HIT_DIE_HINT, ABILITY_HINT, PRIMARY_ABILITY_HINT, CASTER_HINT, MARTIAL_HINT,
   SIZE_HINT, SPEED_HINT, BACKGROUND_ABILITY_HINT,
@@ -26,8 +27,26 @@ import { ThemeToggle } from '@/ui/components/ThemeToggle';
 const STEPS = ['Class', 'Origin', 'Abilities', 'Details'] as const;
 type Step = (typeof STEPS)[number];
 
+/** One source of truth for "what happens next", used by both the inline
+    continue button on desktop and the docked action button on a phone. */
+const NEXT: Record<Step, Step | null> = {
+  Class: 'Origin', Origin: 'Abilities', Abilities: 'Details', Details: null,
+};
+const NEXT_LABEL: Record<Step, string> = {
+  Class: 'Continue to Origin',
+  Origin: 'Continue to Abilities',
+  Abilities: 'Continue to Details',
+  Details: 'Begin the campaign (M2)',
+};
+
 export function CreateClient() {
   const [step, setStep] = useState<Step>('Class');
+  /**
+   * Compact width only: the live sheet is a bottom sheet with two detents, and
+   * this is which one it rests at. It is never read on desktop, where the same
+   * element is a sticky aside.
+   */
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [build, setBuild] = useState<CharacterBuild>(() => ({
     ...emptyBuild(),
     classId: '',
@@ -48,36 +67,65 @@ export function CreateClient() {
   const issues = useMemo(() => validateBuild(build), [build]);
   const errors = issues.filter((i) => i.severity === 'error');
   const warnings = issues.filter((i) => i.severity === 'warning');
-  const ready = build.classId && build.speciesId && build.backgroundId;
+  const ready = Boolean(build.classId && build.speciesId && build.backgroundId);
+
+  /** The two numbers worth showing on the collapsed sheet. */
+  const peek = useMemo(() => {
+    if (!ready) return null;
+    try {
+      const d = derive(build);
+      return { ac: d.armorClass, hp: d.maxHp };
+    } catch {
+      return null;
+    }
+  }, [build, ready]);
+
+  const cls = CLASSES.find((c) => c.id === build.classId);
+  const species = SPECIES.find((sp) => sp.id === build.speciesId);
+  const nextStep = NEXT[step];
+  const nextBlocked =
+    (step === 'Class' && !build.classId) ||
+    (step === 'Origin' && !(species && build.backgroundId)) ||
+    step === 'Details';
+
+  // Tap the grabber to cycle detents; drag it to set one directly. The gesture
+  // is never the only route in (accessibility.md > Mobility: "offer onscreen
+  // ways to achieve the same outcome").
+  const dragFrom = useRef<number | null>(null);
+  const dragged = useRef(false);
+
+  const statusText = errors.length === 0 && ready ? 'playable' : `${errors.length} to resolve`;
 
   return (
     <main className="min-h-screen">
-      <header className="flex items-center justify-between px-8 py-4 border-b" style={{ borderColor: 'var(--hairline)' }}>
-        <Link href="/" className="label label-strong" style={{ textDecoration: 'none' }}>← dnthey</Link>
-        <nav className="flex gap-1">
+      {/* Brand and controls on one row, the step rail on its own full-width row
+          below at compact width; a single row on desktop. */}
+      <header className="create-bar gutter border-b" style={{ borderColor: 'var(--hairline)' }}>
+        <Link href="/" className="label label-strong create-bar__brand" style={{ textDecoration: 'none' }}>← dnthey</Link>
+
+        <nav className="step-rail create-bar__rail" aria-label="Creation steps">
           {STEPS.map((s, i) => (
             <button
               key={s}
               onClick={() => setStep(s)}
               className="btn"
               data-active={step === s}
-              style={{
-                padding: '0.35rem 0.8rem',
-                borderColor: step === s ? 'var(--rubric)' : 'var(--hairline)',
-                color: step === s ? 'var(--rubric)' : 'var(--content-3)',
-              }}
+              aria-current={step === s ? 'step' : undefined}
             >
-              {i + 1}. {s}
+              <span className="step-n">{i + 1}.</span> {s}
             </button>
           ))}
         </nav>
-        <div className="flex items-center gap-4">
-          <span className="label">{errors.length === 0 && ready ? 'playable' : `${errors.length} to resolve`}</span>
+
+        <div className="flex items-center gap-4 create-bar__trail">
+          {/* On a phone this count lives on the sheet dock, where the problems
+              it refers to are one tap away. */}
+          <span className="label hide-compact">{statusText}</span>
           <ThemeToggle />
         </div>
       </header>
 
-      <div className="grid gap-6 px-8 py-6" style={{ gridTemplateColumns: 'minmax(0,1fr) 30rem' }}>
+      <div className="create-grid gutter">
         <section>
           {step === 'Class' && <ClassStep build={build} patch={patch} patchWith={patchWith} onNext={() => setStep('Origin')} />}
           {step === 'Origin' && <OriginStep build={build} patch={patch} patchWith={patchWith} onNext={() => setStep('Abilities')} />}
@@ -85,24 +133,104 @@ export function CreateClient() {
           {step === 'Details' && <DetailsStep build={build} patch={patch} patchWith={patchWith} />}
         </section>
 
-        <aside className="flex flex-col gap-4" style={{ position: 'sticky', top: '1.5rem', alignSelf: 'start' }}>
-          {ready ? <Sheet build={build} /> : (
-            <div className="panel text-center" style={{ padding: '2rem' }}>
-              <p className="prose-ink" style={{ color: 'var(--content-3)' }}>
-                Your sheet fills in as you choose.
-              </p>
-            </div>
-          )}
+        {/* Tapping the scrim is the way out that is not the Done button
+            (sheets.md > Best practices). Rendered only while expanded. */}
+        {sheetOpen && (
+          <button
+            type="button"
+            className="dock-scrim hide-wide"
+            aria-label="Collapse the character sheet"
+            onClick={() => setSheetOpen(false)}
+          />
+        )}
 
-          {(errors.length > 0 || warnings.length > 0) && (
-            <div className="panel" style={{ padding: '1rem' }}>
-              <h3 className="label mb-2">Validation</h3>
-              <ul>
-                {errors.map((i, n) => <li key={`e${n}`} className="issue">{i.message}</li>)}
-                {warnings.map((i, n) => <li key={`w${n}`} className="issue issue-warn">{i.message}</li>)}
-              </ul>
-            </div>
-          )}
+        {/*
+          The same element, two jobs. Desktop: a sticky aside beside the form.
+          Phone: a nonmodal bottom sheet, because the live sheet is feedback on
+          the choice being made and must not move to another screen
+          (sheets.md > Mobile: a nonmodal sheet suits "supplementary items that
+          affect the main task in the parent view"). Collapsed it still shows
+          who this character is, their armour class and hit points, and what is
+          left to resolve; expanded it is the whole sheet.
+        */}
+        <aside className="live-aside" data-open={sheetOpen}>
+          <button
+            type="button"
+            className="dock-handle hide-wide"
+            aria-expanded={sheetOpen}
+            aria-controls="live-sheet"
+            onPointerDown={(e) => { dragFrom.current = e.clientY; dragged.current = false; }}
+            onPointerUp={(e) => {
+              if (dragFrom.current === null) return;
+              const dy = e.clientY - dragFrom.current;
+              dragFrom.current = null;
+              if (Math.abs(dy) > 24) { dragged.current = true; setSheetOpen(dy < 0); }
+            }}
+            onClick={() => {
+              if (dragged.current) { dragged.current = false; return; }
+              setSheetOpen((v) => !v);
+            }}
+          >
+            <span className="dock-handle__grabber" aria-hidden />
+            <span className="dock-handle__title">
+              <span className="label" style={{ display: 'block' }}>
+                {sheetOpen ? 'Hide character sheet' : 'Character sheet'}
+              </span>
+              <span className="meta" style={{ display: 'block' }}>
+                {ready
+                  ? `${build.name || 'Unnamed'} — level ${build.level} ${species?.name ?? ''} ${cls?.name ?? ''}`
+                  : 'Fills in as you choose'}
+              </span>
+            </span>
+            <span className="dock-handle__stats">
+              {peek ? (
+                <>
+                  <span className="meta-quiet">
+                    AC <span className="stat-num" style={{ color: 'var(--content-1)' }}>{peek.ac}</span>
+                  </span>
+                  <span className="meta-quiet">
+                    HP <span className="stat-num" style={{ color: 'var(--content-1)' }}>{peek.hp}</span>
+                  </span>
+                </>
+              ) : (
+                <span className="label" style={{ color: 'var(--rubric)' }}>{statusText}</span>
+              )}
+            </span>
+          </button>
+
+          <div id="live-sheet" className="live-aside__scroll">
+            {ready ? <Sheet build={build} /> : (
+              <div className="panel text-center" style={{ padding: '2rem' }}>
+                <p className="prose-ink" style={{ color: 'var(--content-3)' }}>
+                  Your sheet fills in as you choose.
+                </p>
+              </div>
+            )}
+
+            {(errors.length > 0 || warnings.length > 0) && (
+              <div className="panel" style={{ padding: '1rem' }}>
+                <h3 className="label mb-2">Validation</h3>
+                <ul>
+                  {errors.map((i, n) => <li key={`e${n}`} className="issue">{i.message}</li>)}
+                  {warnings.map((i, n) => <li key={`w${n}`} className="issue issue-warn">{i.message}</li>)}
+                </ul>
+              </div>
+            )}
+          </div>
+
+          {/* The step's primary action, low and within thumb reach rather than
+              at the end of a long scroll (designing-for-ios.md > Best
+              practices). Unavailable until the step's required data is there
+              (entering-data.md > Best practices). */}
+          <div className="dock-action hide-wide">
+            <button
+              className="btn btn-primary"
+              disabled={nextBlocked}
+              onClick={() => { if (nextStep) setStep(nextStep); }}
+            >
+              {NEXT_LABEL[step]}
+            </button>
+          </div>
         </aside>
       </div>
     </main>
@@ -119,7 +247,7 @@ function ClassStep({ build, patch, onNext }: StepProps) {
         n={1} title="Choose a class"
         blurb="In the 2024 rules you pick your class first — it is the biggest decision about how you will actually play."
       />
-      <div className="grid gap-2.5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(16.5rem, 1fr))' }}>
+      <div className="opt-grid" style={{ ['--opt-min' as string]: '16.5rem' }}>
         {CLASSES.map((c) => (
           <button
             key={c.id}
@@ -164,7 +292,7 @@ function ClassStep({ build, patch, onNext }: StepProps) {
                 {' · '}{cls.subclassName} at level {cls.subclassLevel}
               </p>
             </div>
-            <button className="btn btn-primary" onClick={onNext}>Continue to Origin</button>
+            <button className="btn btn-primary hide-compact" onClick={onNext}>Continue to Origin</button>
           </div>
 
           <hr className="rule" style={{ margin: '1rem 0' }} />
@@ -206,7 +334,7 @@ function OriginStep({ build, patch, patchWith, onNext }: StepProps) {
       />
 
       <h3 className="label mb-2">Background</h3>
-      <div className="grid gap-2.5 mb-5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(13rem, 1fr))' }}>
+      <div className="opt-grid opt-grid--dense mb-5" style={{ ['--opt-min' as string]: '13rem' }}>
         {BACKGROUNDS.map((b) => (
           <button
             key={b.id} className="card-select" data-selected={build.backgroundId === b.id}
@@ -232,7 +360,7 @@ function OriginStep({ build, patch, patchWith, onNext }: StepProps) {
       )}
 
       <h3 className="label mb-2">Species</h3>
-      <div className="grid gap-2.5 mb-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(12rem, 1fr))' }}>
+      <div className="opt-grid opt-grid--dense mb-3" style={{ ['--opt-min' as string]: '12rem' }}>
         {SPECIES.map((s) => (
           <button
             key={s.id} className="card-select" data-selected={build.speciesId === s.id}
@@ -252,7 +380,7 @@ function OriginStep({ build, patch, patchWith, onNext }: StepProps) {
       {species?.choice && (
         <div className="panel p-4 mb-4">
           <h3 className="label mb-2">{species.choice.label}</h3>
-          <div className="grid gap-2.5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(17rem, 1fr))' }}>
+          <div className="opt-grid" style={{ ['--opt-min' as string]: '17rem' }}>
             {species.choice.options.map((o) => (
               <button
                 key={o.id} className="card-select" data-selected={build.speciesChoice === o.id}
@@ -303,7 +431,7 @@ function OriginStep({ build, patch, patchWith, onNext }: StepProps) {
         </>
       )}
 
-      <button className="btn btn-primary" onClick={onNext} disabled={!species || !bg}>
+      <button className="btn btn-primary hide-compact" onClick={onNext} disabled={!species || !bg}>
         Continue to Abilities
       </button>
     </>
@@ -339,7 +467,7 @@ function AbilitiesStep({ build, patch, onNext }: StepProps) {
         blurb="Pick a method, assign the numbers, then spend your background's increase."
       />
 
-      <div className="flex gap-2 mb-4">
+      <div className="flex flex-wrap gap-2 mb-4" role="group" aria-label="Score method">
         {(['standard_array', 'point_buy', 'rolled'] as const).map((m) => (
           <button
             key={m} className="chip" data-selected={build.scoreMethod === m}
@@ -368,7 +496,7 @@ function AbilitiesStep({ build, patch, onNext }: StepProps) {
         </p>
       )}
       {build.scoreMethod === 'rolled' && (
-        <div className="mb-3 flex items-center gap-3">
+        <div className="mb-3 flex flex-wrap items-center gap-3">
           <button
             className="btn"
             onClick={() => {
@@ -388,17 +516,22 @@ function AbilitiesStep({ build, patch, onNext }: StepProps) {
 
       <div className="panel p-4 mb-5">
         {ABILITIES.map((a) => (
-          <div key={a} className="flex items-center gap-3 py-1.5">
-            <span style={{ width: '7.5rem', fontSize: '0.875rem' }}>{ABILITY_NAMES[a]}</span>
+          <div key={a} className="ability-row">
+            <label
+              className="ability-row__name"
+              htmlFor={build.scoreMethod === 'point_buy' ? undefined : `score-${a}`}
+            >
+              {ABILITY_NAMES[a]}
+            </label>
 
             {build.scoreMethod === 'point_buy' ? (
-              <div className="flex items-center gap-2">
-                <button className="btn" style={{ padding: '0.1rem 0.5rem' }}
+              <div className="ability-row__control flex items-center gap-2">
+                <button className="btn btn-step" aria-label={`Lower ${ABILITY_NAMES[a]}`}
                   onClick={() => setScore(a, Math.max(8, build.baseScores[a] - 1))}>−</button>
                 <span className="stat-num" style={{ width: '2rem', textAlign: 'center', fontSize: '1.1rem' }}>
                   {build.baseScores[a]}
                 </span>
-                <button className="btn" style={{ padding: '0.1rem 0.5rem' }}
+                <button className="btn btn-step" aria-label={`Raise ${ABILITY_NAMES[a]}`}
                   onClick={() => setScore(a, Math.min(15, build.baseScores[a] + 1))}>+</button>
                 <span className="meta-quiet" style={{ width: '3.5rem' }}>
                   {POINT_BUY_COST[build.baseScores[a]] ?? '—'} pts
@@ -406,6 +539,8 @@ function AbilitiesStep({ build, patch, onNext }: StepProps) {
               </div>
             ) : (
               <select
+                id={`score-${a}`}
+                className="ability-row__control"
                 value={build.baseScores[a]}
                 onChange={(e) => setScore(a, Number(e.target.value))}
                 style={{ width: '6rem' }}
@@ -416,7 +551,7 @@ function AbilitiesStep({ build, patch, onNext }: StepProps) {
               </select>
             )}
 
-            <span className="meta stat-num" style={{ marginLeft: 'auto' }}>
+            <span className="meta stat-num ability-row__mod">
               {formatMod(Math.floor((build.baseScores[a] + (build.backgroundIncrease[a] ?? 0) - 10) / 2))}
               {build.backgroundIncrease[a] ? (
                 <span style={{ color: 'var(--content-2)' }}> (+{build.backgroundIncrease[a]} bg)</span>
@@ -453,7 +588,7 @@ function AbilitiesStep({ build, patch, onNext }: StepProps) {
         </div>
       )}
 
-      <button className="btn btn-primary" onClick={onNext}>Continue to Details</button>
+      <button className="btn btn-primary hide-compact" onClick={onNext}>Continue to Details</button>
     </>
   );
 }
@@ -480,7 +615,7 @@ function DetailsStep({ build, patch, patchWith }: StepProps) {
     <>
       <StepHeader n={4} title="Who are they?" blurb="The mechanical leftovers, and the part the Dungeon Master will actually use." />
 
-      <div className="grid grid-cols-2 gap-3 mb-5">
+      <div className="field-pair mb-5">
         <div>
           <label className="label">Name</label>
           <input type="text" value={build.name} placeholder="Veyra Ashlock"
@@ -541,7 +676,7 @@ function DetailsStep({ build, patch, patchWith }: StepProps) {
         ))}
       </div>
 
-      <div className="grid grid-cols-2 gap-3 mb-5">
+      <div className="field-pair mb-5">
         <div>
           <label className="label">Appearance</label>
           <textarea rows={3} value={build.appearance} placeholder="One line a stranger would notice first."
@@ -555,7 +690,7 @@ function DetailsStep({ build, patch, patchWith }: StepProps) {
         </div>
       </div>
 
-      <button className="btn btn-primary" disabled>Begin the campaign (M2)</button>
+      <button className="btn btn-primary hide-compact" disabled>Begin the campaign (M2)</button>
     </>
   );
 }

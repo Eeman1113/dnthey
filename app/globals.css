@@ -123,11 +123,23 @@
 
 * { box-sizing: border-box; }
 
+/* Root size is a PERCENTAGE, not a pixel value. 93.75% of a 16px default is
+   15px, so the desktop design is pixel-identical — but every rem in the sheet
+   below now scales with the reader's browser text size instead of ignoring it.
+   A hard `font-size: 15px` here silently opted the whole app out of text
+   scaling (typography.md › Supporting Dynamic Type: "Make sure your app's
+   layout adapts to all font sizes"). */
+html {
+  font-size: 93.75%;
+  -webkit-text-size-adjust: 100%;
+}
+
+body { font-size: 1rem; }
+
 html, body {
   background: var(--surface);
   color: var(--content-1);
   font-family: var(--font-ui);
-  font-size: 15px;
   line-height: 1.5;
   margin: 0;
   min-height: 100%;
@@ -483,3 +495,473 @@ button:focus-visible [data-hint]::before { transform: translateX(-50%); }
 }
 .card-class { min-height: 9.5rem; display: flex; flex-direction: column; }
 .card-class .card-meta { margin-top: auto; padding-top: 0.6rem; }
+
+/* ===========================================================================
+   COMPACT WIDTH (phone)
+
+   Everything below this line is additive: the desktop layout is reached by
+   `@media (min-width: 900px)` or is simply the untouched default, and the
+   phone layout is the override. No colour token values are defined here —
+   every surface and every text colour is composed from the semantic tokens
+   above, so the palette stays the single source of truth.
+
+   The 900px line is not a device, it is the width at which the two-column
+   creator stops fitting (a 30rem sheet plus a readable 1fr column plus
+   gutters). layout.md › Size classes: "Determine layout based on size
+   classes, not device type or orientation."
+   ========================================================================= */
+
+:root {
+  --gutter: 1rem;
+  /* Height the fixed bottom bar reserves at compact width. */
+  --dock-h: 8.75rem;
+}
+@media (min-width: 900px) {
+  :root { --gutter: 2rem; }
+}
+
+/* Page gutters that also clear a notch or a rounded corner.
+   layout.md › Guides and safe areas. */
+.gutter {
+  padding-left: max(var(--gutter), env(safe-area-inset-left));
+  padding-right: max(var(--gutter), env(safe-area-inset-right));
+}
+
+/* dvh so the hero is not cut off by the collapsing browser toolbar. */
+.min-h-dvh { min-height: 100vh; min-height: 100dvh; }
+
+/* Two switches instead of per-component media queries. `!important` because
+   several of these sit on elements that also carry Tailwind display utilities. */
+@media (max-width: 899.98px) { .hide-compact { display: none !important; } }
+@media (min-width: 900px)    { .hide-wide    { display: none !important; } }
+
+/* --------------------------------------------------------------- controls --
+   accessibility.md › Mobility: iOS default control size is 44x44 pt, minimum
+   28x28. Desktop keeps its 34px controls (desktop default is 28x28).         */
+
+@media (max-width: 899.98px) {
+  /* Belt and braces for the same overflow on a narrow pointer window, where
+     the tooltip above is still live. `clip` rather than `hidden` so it never
+     becomes a scroll container and never traps the fixed sheet dock. */
+  html, body { overflow-x: clip; }
+
+  :root {
+    /* 100% of a 16px default = 16px root, so .label and .meta (0.8125rem)
+       land on 13px rather than the 12.2px they measured at a 15px root, and
+       form fields reach 16px — below which iOS Safari zooms on focus. */
+    font-size: 100%;
+  }
+
+  .btn { min-height: 44px; padding: 0.55rem 1rem; }
+  .chip { min-height: 44px; padding: 0.4rem 0.75rem; }
+  .tag { font-size: 0.8125rem; padding: 0.15rem 0.45rem; }
+
+  input[type="text"], textarea, select {
+    min-height: 44px;
+    font-size: 1rem;
+    padding: 0.6rem 0.7rem;
+  }
+  textarea { min-height: 5.5rem; }
+
+  /* Cards get a taller comfortable target and room for the check glyph. */
+  .card-select { padding: 0.85rem 2.5rem 0.9rem 0.95rem; }
+  .card-class { min-height: 0; }
+}
+
+/* Point-buy stepper. Square, and a real 44pt target on touch. */
+.btn-step { padding: 0.1rem 0.5rem; }
+@media (max-width: 899.98px) {
+  .btn-step { width: 44px; height: 44px; padding: 0; font-size: 1.125rem; }
+}
+
+/* Theme toggle segments: sized in CSS (not inline style) so touch can widen
+   them without touching the desktop metrics. */
+.theme-btn { width: 30px; height: 28px; }
+@media (max-width: 899.98px) {
+  .theme-btn { width: 44px; height: 44px; font-size: 1rem; }
+}
+
+/* ------------------------------------------------------------- title bar --
+   Brand, model status and theme toggle. One row on desktop; on a phone the
+   status line — which can read "Dungeon Master must be summoned" — takes its
+   own row instead of crushing the other two.                                */
+
+.title-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 1.25rem;
+  padding-top: 0.875rem;
+  padding-bottom: 0.875rem;
+}
+.title-bar__brand  { flex: 1 1 auto; }
+.title-bar__toggle { order: 1; }
+.title-bar__status { order: 3; flex: 1 0 100%; }
+@media (min-width: 900px) {
+  .title-bar { padding-top: 1.25rem; padding-bottom: 1.25rem; }
+  .title-bar__brand  { flex: 0 0 auto; }
+  .title-bar__toggle { order: 1; }
+  .title-bar__status { order: 0; flex: 0 0 auto; margin-left: auto; }
+}
+
+/* Primary actions stack and go full width on a phone; one-handed reach means
+   a 44pt-tall target you can hit with a thumb, not two 50%-width buttons.
+   designing-for-ios.md › Best practices.                                    */
+.cta-row { display: flex; gap: 0.75rem; }
+@media (max-width: 899.98px) {
+  .cta-row { flex-direction: column; width: 100%; max-width: 20rem; }
+  .cta-row > * { width: 100%; min-height: 48px; }
+}
+
+/* ------------------------------------------------------------- step rail --
+   The 4-step wizard. Desktop keeps four separate chips. On a phone they
+   become one full-width segmented control: four segments is within
+   segmented-controls.md's "no more than about five segments on iPhone", and
+   it "preserve[s] their grouping regardless of the view size", which is
+   exactly what a progress indicator needs.                                  */
+
+.step-rail { display: flex; gap: 0.25rem; }
+/* State in CSS rather than inline styles, so the compact override below does
+   not have to fight specificity. Desktop appearance is unchanged. */
+.step-rail > button { padding: 0.35rem 0.8rem; border-color: var(--hairline); color: var(--content-3); }
+.step-rail > button[data-active="true"] { border-color: var(--rubric); color: var(--rubric); }
+
+@media (max-width: 899.98px) {
+  .step-rail {
+    width: 100%;
+    gap: 0;
+    padding: 2px;
+    border: 1px solid var(--hairline);
+    border-radius: 9px;
+    background: var(--panel);
+  }
+  .step-rail > button {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 40px;
+    padding: 0.3rem 0.2rem;
+    border-color: transparent;
+    background: transparent;
+    border-radius: 7px;
+    font-size: 0.8125rem;
+  }
+  .step-rail > button[data-active="true"] {
+    background: color-mix(in srgb, var(--rubric) 12%, var(--panel));
+    border-color: transparent;
+  }
+  /* "Step 3 of 4" is already spelled out in the step header below. */
+  .step-n { display: none; }
+}
+
+/* ---------------------------------------------------------- creator shell */
+
+.create-grid {
+  display: grid;
+  gap: 1.5rem;
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+}
+@media (min-width: 900px) {
+  .create-grid { grid-template-columns: minmax(0, 1fr) 30rem; }
+}
+@media (max-width: 899.98px) {
+  .create-grid {
+    grid-template-columns: minmax(0, 1fr);
+    /* Clear the fixed dock so the last control is never unreachable. */
+    padding-bottom: calc(var(--dock-h) + env(safe-area-inset-bottom) + 1rem);
+  }
+}
+
+/* Creator header: brand + status/toggle on row one, the step rail on row two. */
+.create-bar {
+  display: grid;
+  align-items: center;
+  gap: 0.6rem 1rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "brand trail" "rail rail";
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+.create-bar__brand { grid-area: brand; }
+.create-bar__rail  { grid-area: rail; }
+.create-bar__trail { grid-area: trail; justify-self: end; }
+@media (min-width: 900px) {
+  .create-bar {
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas: "brand rail trail";
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+  .create-bar__rail { justify-self: center; }
+}
+
+/* Side-by-side form fields collapse to one column. typography.md › Supporting
+   Dynamic Type: "Reduce the number of columns when the font size increases."  */
+.field-pair { display: grid; gap: 0.75rem; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 900px) {
+  .field-pair { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+}
+
+/* ------------------------------------------------------------ ability row --
+   Desktop: name | control | modifier on one line. Phone: name and modifier on
+   the first line, the control on its own line beneath — the stacked layout
+   typography.md recommends for horizontally constrained rows.               */
+
+.ability-row {
+  display: grid;
+  align-items: center;
+  gap: 0.3rem 0.75rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "name mod" "control control";
+  padding: 0.5rem 0;
+}
+.ability-row + .ability-row { border-top: 1px solid var(--hairline); }
+.ability-row__name    { grid-area: name; font-size: 0.875rem; }
+.ability-row__control { grid-area: control; }
+.ability-row__mod     { grid-area: mod; justify-self: end; }
+@media (min-width: 900px) {
+  .ability-row {
+    grid-template-columns: 7.5rem auto minmax(0, 1fr);
+    grid-template-areas: "name control mod";
+    padding: 0.375rem 0;
+    gap: 0 0.75rem;
+  }
+  .ability-row + .ability-row { border-top: 0; }
+}
+
+/* ------------------------------------------------------- live sheet dock --
+   The character sheet is the feedback loop of this screen, so it cannot move
+   to another page. On desktop it is a sticky aside. On a phone it becomes a
+   nonmodal bottom sheet with two detents: a peek that always shows the
+   character line, the key numbers and anything left to resolve, and an
+   expanded detent holding the whole sheet.
+
+   sheets.md › Mobile: "you can use a nonmodal sheet for this workflow" for
+   "supplementary items that affect the main task in the parent view", and
+   "consider supporting the medium detent to allow progressive disclosure".  */
+
+.live-aside {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+@media (min-width: 900px) {
+  .live-aside { position: sticky; top: 1.5rem; align-self: start; }
+}
+
+.live-aside__scroll { display: flex; flex-direction: column; gap: 1rem; }
+
+@media (max-width: 899.98px) {
+  .live-aside {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 40;
+    gap: 0;
+    max-height: 90dvh;
+    background: var(--panel);
+    border-top: 1px solid var(--hairline-lit);
+    border-radius: 14px 14px 0 0;
+    box-shadow: var(--shadow);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .live-aside__scroll {
+    display: none;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 max(var(--gutter), env(safe-area-inset-left)) 0.75rem;
+  }
+  .live-aside[data-open="true"] .live-aside__scroll {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    animation: dock-in 220ms cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  /* Inside the dock the panels are already on a panel; drop the double frame. */
+  .live-aside__scroll > .panel { border-color: var(--hairline); }
+}
+@keyframes dock-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* The grabber row. sheets.md: "A grabber shows people that they can drag the
+   sheet to resize it; they can also tap it to cycle through the detents." It
+   is a real <button> so tapping, clicking and the keyboard all work, and so
+   the gesture is never the only way in (accessibility.md › Mobility). */
+.dock-handle {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.15rem 0.75rem;
+  padding: 0.75rem max(var(--gutter), env(safe-area-inset-left)) 0.6rem;
+  background: transparent;
+  border: 0;
+  border-radius: 14px 14px 0 0;
+  text-align: left;
+  color: var(--content-1);
+  font-family: var(--font-ui);
+  cursor: pointer;
+  touch-action: none;
+}
+.dock-handle__grabber {
+  grid-column: 1 / -1;
+  justify-self: center;
+  width: 2.25rem;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--hairline-lit);
+  margin-bottom: 0.45rem;
+}
+.dock-handle__title { min-width: 0; }
+.dock-handle__stats {
+  display: flex;
+  gap: 0.6rem;
+  justify-self: end;
+  align-items: baseline;
+}
+
+/* The step's primary action lives in the dock, low and reachable, and is the
+   one prominent button on the screen. buttons.md › Style: "use a button that
+   has a prominent visual style for the most likely action in a view."        */
+.dock-action {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.1rem max(var(--gutter), env(safe-area-inset-left)) 0.75rem;
+}
+.dock-action > .btn { flex: 1 1 auto; min-height: 48px; }
+
+.dock-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 39;
+  background: rgba(var(--scrim-rgb), 0.55);
+  border: 0;
+  padding: 0;
+}
+
+/* ------------------------------------------------------------ sheet grids --
+   The sheet is drawn for a 30rem aside. At 320px those 4- and 6-up grids
+   would put tabular numerals in 45px cells, so they re-flow.                */
+.sheet-stats     { display: grid; gap: 0.5rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.sheet-abilities { display: grid; gap: 0.375rem; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.sheet-cols      { display: grid; gap: 1.25rem; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 900px) {
+  .sheet-stats     { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .sheet-abilities { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .sheet-cols      { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+}
+
+/* ---------------------------------------------------------- touch help ----
+   The hover tooltip above is unreachable on a phone: there is no hover, and
+   the jargon it explains ("d8", "WIS", "expertise") is exactly what a new
+   player needs. offering-help.md documents tooltips as a pointer behaviour
+   (Desktop: "tooltips can appear when a person holds the pointer over an
+   element"), so touch needs its own affordance rather than a port of hover.
+
+   A marked term is therefore tappable: HintLayer catches the tap and shows
+   the same text in an anchored card. The hint element itself stays a
+   non-focusable <span> inside the card <button> — no nested interactive
+   element — and the card's aria-label still spells every term out.          */
+
+/* On a device with no hover the CSS tooltip is dead weight, and worse: it is
+   an absolutely positioned box up to 17rem wide anchored at the middle of a
+   tag, so it pushes the document's scroll width past the viewport and the
+   whole page scrolls sideways. Remove it there — HintLayer serves the same
+   text on tap. */
+@media (hover: none) {
+  [data-hint]::after,
+  [data-hint]::before { content: none; }
+}
+
+/* Keyboard parity for the standalone terms in the character sheet, which are
+   real buttons rather than spans inside a card. */
+[data-hint]:focus-visible::after,
+[data-hint]:focus-visible::before {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+[data-hint]:focus-visible::before { transform: translateX(-50%); }
+
+/* A term that is its own control: looks like the text around it, carries the
+   same dashed "there is more here" mark as .tag[data-hint]. */
+.hint-term {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  background: none;
+  border: 0;
+  border-bottom: 1px dashed var(--hairline-lit);
+  padding: 0;
+  cursor: help;
+  text-align: inherit;
+}
+@media (max-width: 899.98px) {
+  /* 28x28 is accessibility.md's absolute minimum control size; these sit
+     inside dense sheet rows where 44 would break the layout, so they take
+     the minimum plus padding rather than the default. */
+  .hint-term { min-height: 28px; min-width: 28px; }
+}
+
+.hint-pop {
+  position: fixed;
+  z-index: 80;
+  max-width: 24rem;
+  padding: 0.7rem 0.85rem 0.6rem;
+  border-radius: 10px;
+  background: var(--raised);
+  border: 1px solid var(--hairline-lit);
+  box-shadow: var(--shadow);
+  color: var(--content-1);
+  font-family: var(--font-ui);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  animation: hint-in 140ms ease-out;
+}
+.hint-pop__close {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 0.5rem;
+  min-height: 32px;
+  padding: 0 0.6rem;
+  border-radius: 7px;
+  border: 1px solid var(--hairline-lit);
+  background: var(--panel);
+  color: var(--content-2);
+  font-family: var(--font-ui);
+  font-size: 0.8125rem;
+  font-weight: 550;
+  cursor: pointer;
+}
+@keyframes hint-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* The hero sits optically high against the footer on a desktop window; on a
+   phone the vertical budget is too tight to spend 2.5rem on that. */
+@media (min-width: 900px) {
+  .hero-lift { margin-top: -2.5rem; }
+}
+
+/* --------------------------------------------------------- option grids ---
+   `minmax(min(100%, X), 1fr)` instead of `minmax(X, 1fr)`: the hard minimum
+   forces a track wider than a 320px viewport and takes the page into
+   horizontal scroll. The `min(100%, …)` form lets the track collapse to the
+   column width instead. Desktop behaviour is identical, because above 900px
+   100% is always the larger of the two.                                     */
+.opt-grid {
+  display: grid;
+  gap: 0.625rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--opt-min, 13rem)), 1fr));
+}
+/* Short cards — a name and two tags — can hold two up as soon as there is
+   room for a readable line, which saves a 16-item list becoming 1300px of
+   scroll. Below that they go single file. */
+@media (min-width: 375px) and (max-width: 899.98px) {
+  .opt-grid--dense { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .opt-grid--dense .card-title { font-size: 1.0625rem; }
+  .opt-grid--dense .card-select { padding-right: 1.9rem; }
+}
