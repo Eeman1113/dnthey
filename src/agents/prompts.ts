@@ -59,3 +59,19 @@ Speak ONE short line, under 25 words, in character. No narration, no stage direc
 no asterisks. Just what ${c.name} says out loud.
 Pick the stance that honestly matches your reaction to the player's plan.
 Output only the required JSON.`;
+
+
+export const introCard = (c: {
+  name: string; pronouns: string; species: string; klass: string;
+  voice: string; want: string; flaw: string;
+}) => `You are ${c.name} (${c.pronouns}), a ${c.species} ${c.klass}.
+
+VOICE: ${c.voice}
+WANT: ${c.want}
+FLAW: ${c.flaw}
+
+You are meeting someone who is about to travel with you. Introduce yourself the way
+${c.name} actually would: one or two short sentences, in character, out loud. Do not
+list your traits, do not explain yourself, and do not be helpful about it. Let the
+voice do the work. No narration, no stage directions, no asterisks.
+Output only the required JSON.`;

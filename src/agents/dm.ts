@@ -7,7 +7,7 @@
  * missing model degrades the game instead of stopping it.
  */
 import { getSession, askJson, askProse } from './session';
-import { ADJUDICATOR, NARRATOR, WORLDSMITH, companionCard } from './prompts';
+import { ADJUDICATOR, NARRATOR, WORLDSMITH, companionCard, introCard } from './prompts';
 import {
   ADJUDICATION_SCHEMA, AdjudicationZ, type Adjudication,
   WORLD_SCHEMA, WorldZ, type World,
@@ -169,6 +169,27 @@ export async function companionReact(
       (v) => CompanionReplyZ.parse(v),
       { timeoutMs: 30_000 },
     );
+  } catch {
+    return null;
+  }
+}
+
+
+/**
+ * How a companion introduces themselves. Generated once when the party forms,
+ * so meeting them is a scene rather than a list of names in a sidebar.
+ */
+export async function companionIntro(card: CompanionCard, world: string): Promise<string | null> {
+  try {
+    const s = await getSession('companion', introCard(card), `intro:${card.id}`);
+    const out = await askJson(
+      s,
+      `You are all in: ${world}. Introduce yourself.`,
+      COMPANION_SCHEMA,
+      (v) => CompanionReplyZ.parse(v),
+      { timeoutMs: 30_000 },
+    );
+    return out?.speech ? cleanProse(out.speech) : null;
   } catch {
     return null;
   }

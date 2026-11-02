@@ -11,7 +11,7 @@ import { DiceRoll } from '@/ui/components/DiceRoll';
 import { ThemeToggle } from '@/ui/components/ThemeToggle';
 import { classArtSrc } from '@/ui/classArt';
 import { matchBiome } from '@/ui/scenery';
-import { buildWorld, cleanProse } from '@/agents/dm';
+import { buildWorld, cleanProse, companionIntro } from '@/agents/dm';
 import { modelAvailable, prewarm, destroyAll } from '@/agents/session';
 import { NARRATOR, ADJUDICATOR } from '@/agents/prompts';
 import {
@@ -24,7 +24,18 @@ import { pickCompanions } from '@/campaign/companions';
 import { loadCampaign, saveCampaign, clearCampaign, loadCharacters } from '@/campaign/persist';
 import type { Campaign, Beat } from '@/campaign/types';
 
-type Phase = 'idle' | 'summoning' | 'playing';
+/**
+ * The sequence is deliberately a sequence: you make a character, the world is
+ * built around them, you meet the people you are travelling with, and only
+ * then does play start. Dropping someone straight into a prose log with two
+ * strangers already in the sidebar skips the part that makes them a party.
+ */
+/** Used when the model declines or times out, so the party still forms. */
+function fallbackIntro(name: string): string {
+  return `${name} looks you over, says nothing, and falls in beside you.`;
+}
+
+type Phase = 'idle' | 'summoning' | 'meeting' | 'playing';
 
 export function PlayClient() {
   const [campaign, setCampaign] = useState<Campaign | null>(null);
@@ -35,6 +46,9 @@ export function PlayClient() {
   const [combat, setCombat] = useState<CombatState | null>(null);
   const [foes, setFoes] = useState<Monster[]>([]);
   const [tone, setTone] = useState('grim, rain-soaked, low magic, a small personal stake');
+  const [intros, setIntros] = useState<{ id: string; line: string }[]>([]);
+  const [pending, setPending] = useState<Campaign | null>(null);
+  const [hasCharacter, setHasCharacter] = useState(true);
   const logRef = useRef<HTMLDivElement>(null);
   const campaignRef = useRef<Campaign | null>(null);
   campaignRef.current = campaign;
@@ -42,6 +56,7 @@ export function PlayClient() {
   useEffect(() => {
     const saved = loadCampaign();
     if (saved) { setCampaign(saved); setPhase('playing'); }
+    setHasCharacter(loadCharacters().length > 0);
     // The slow part is session creation, about 9.5s cold. Start it while the
     // player is still reading the setup screen.
     if (modelAvailable()) { prewarm('narrator', NARRATOR); prewarm('adjudicator', ADJUDICATOR); }
@@ -93,8 +108,35 @@ export function PlayClient() {
       ],
       seed, rollCount: 0,
     };
-    setCampaign(fresh);
+    setPending(fresh);
+    setStatus('The others are already here');
+
+    // Meet them in their own words. These run in sequence rather than in
+    // parallel: the device runs one model, so firing both at once only makes
+    // each of them slower.
+    const lines: { id: string; line: string }[] = [];
+    for (const { card } of fresh.companions) {
+      const line = await companionIntro(card, `${world.realmName}, ${world.openingLocation}`);
+      lines.push({ id: card.id, line: line ?? fallbackIntro(card.name) });
+      setIntros([...lines]);
+    }
+
     setStatus(null);
+    setPhase('meeting');
+  }
+
+  function enterWorld() {
+    if (!pending) return;
+    // The introductions are part of the story, so they go into the log.
+    const spoken: Beat[] = intros.map(({ id, line }) => {
+      const card = pending.companions.find((c) => c.card.id === id)!.card;
+      return {
+        id: ulid(), kind: 'speech', text: line, speaker: card.name,
+        portraitId: card.portraitId, at: Date.now(),
+      };
+    });
+    setCampaign({ ...pending, beats: [...spoken, ...pending.beats] });
+    setPending(null);
     setPhase('playing');
   }
 
@@ -168,6 +210,53 @@ export function PlayClient() {
 
   /* ------------------------------------------------------------- views */
 
+  if (phase === 'meeting' && pending) {
+    return (
+      <main className="min-h-dvh gutter" style={{ padding: '2rem 0 3rem' }}>
+        <div style={{ maxWidth: '46rem', margin: '0 auto' }}>
+          <p className="label">{pending.world.realmName}</p>
+          <h1 style={{ fontSize: 'clamp(1.8rem, 5vw, 2.5rem)', marginTop: '0.3rem' }}>
+            {pending.world.openingLocation}
+          </h1>
+          <p className="prose-ink dropcap" style={{ marginTop: '1rem' }}>
+            {pending.world.openingScene}
+          </p>
+
+          <hr className="rule" style={{ margin: '1.75rem 0' }} />
+
+          <p className="label" style={{ marginBottom: '0.9rem' }}>You are not alone</p>
+          <div style={{ display: 'grid', gap: '0.75rem' }}>
+            {pending.companions.map(({ card }) => {
+              const line = intros.find((i) => i.id === card.id)?.line;
+              return (
+                <div key={card.id} className="meet-card panel">
+                  <Art className="meet-card__art" src={`/assets/classart/${card.portraitId}`}
+                       alt="" width={384} height={384} sizes="76px" />
+                  <div style={{ minWidth: 0 }}>
+                    <p className="card-title">{card.name}</p>
+                    <p className="meta-quiet">{card.species} {card.klass} · {card.pronouns}</p>
+                    <p className="prose-ink meet-card__line">
+                      {line ? `"${line}"` : <span className="meta-quiet">thinking of what to say</span>}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <button
+            className="btn btn-primary"
+            style={{ marginTop: '1.75rem', width: '100%' }}
+            onClick={enterWorld}
+            disabled={intros.length < pending.companions.length}
+          >
+            {intros.length < pending.companions.length ? 'Waiting on introductions' : 'Begin'}
+          </button>
+        </div>
+      </main>
+    );
+  }
+
   if (phase !== 'playing' || !campaign) {
     return (
       <main className="min-h-dvh gutter" style={{ display: 'grid', placeItems: 'center', padding: '2rem 1rem' }}>
@@ -197,8 +286,9 @@ export function PlayClient() {
             </p>
           )}
           <p className="meta-quiet" style={{ marginTop: '1rem' }}>
-            <Link href="/create">Build a character first</Link> if you have not already.
-            Otherwise the most recently saved one is used.
+            {hasCharacter
+              ? <>Playing as your most recently saved character. <Link href="/create">Make another</Link>.</>
+              : <>No character saved yet, so a ready-made one is used. <Link href="/create">Make your own</Link>.</>}
           </p>
         </div>
       </main>

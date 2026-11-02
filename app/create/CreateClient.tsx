@@ -315,7 +315,7 @@ export function CreateClient() {
               (entering-data.md > Best practices). */}
           <div className="dock-action hide-wide">
             {step === 'Details' ? (
-              <SaveAction playable={playable} state={saveState} onSave={saveCharacter} />
+              <SaveAction build={build} playable={playable} state={saveState} onSave={saveCharacter} />
             ) : (
               <button
                 className="btn btn-primary"
@@ -835,7 +835,7 @@ function DetailsStep({ build, patch, patchWith, playable, saveState, onSave }: S
       </div>
 
       <div className="dock-action hide-compact" style={{ padding: 0 }}>
-        <SaveAction playable={playable} state={saveState} onSave={onSave} grow={false} />
+        <SaveAction build={build} playable={playable} state={saveState} onSave={onSave} grow={false} />
       </div>
     </>
   );
@@ -865,23 +865,23 @@ interface SaveProps {
  * (feedback.md). The saved state is announced politely rather than grabbing
  * focus.
  */
-function SaveAction({ playable, state, onSave, grow = true }: {
+function SaveAction({ playable, state, onSave, build, grow = true }: {
   playable: boolean;
   state: SaveState;
   onSave: () => void;
+  build: CharacterBuild;
   grow?: boolean;
 }) {
   return (
     <>
       {state === 'saved' ? (
-        <button
-          type="button"
-          className="btn btn-done"
-          aria-disabled="true"
-          style={grow ? undefined : { flex: '0 0 auto' }}
+        <Link
+          href="/play"
+          className="btn btn-primary"
+          style={grow ? { textDecoration: 'none' } : { flex: '0 0 auto', textDecoration: 'none' }}
         >
-          <span aria-hidden>✓</span> Saved
-        </button>
+          Begin the campaign
+        </Link>
       ) : (
         <button
           type="button"
@@ -896,7 +896,7 @@ function SaveAction({ playable, state, onSave, grow = true }: {
       <div className="dock-note" role="status" aria-live="polite">
         {state === 'saved' && (
           <p className="meta-quiet">
-            Kept on this device. Playing the campaign is the next part being built.
+            {build.name || 'Your character'} is kept on this device.
           </p>
         )}
         {state === 'error' && (

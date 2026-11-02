@@ -1355,3 +1355,17 @@ input[type="text"]:focus, textarea:focus, select:focus {
   padding-left: 0.7rem;
   border-left: 2px solid var(--hairline-lit);
 }
+
+/* ---- meeting the party ---------------------------------------------------
+   A party is people, so they get faces and their own words before play rather
+   than appearing as two names in a sidebar. */
+.meet-card { display: flex; gap: 0.9rem; align-items: flex-start; padding: 0.9rem; }
+.meet-card__art { width: 76px; height: 76px; object-fit: contain; flex: none; }
+.meet-card__line { margin-top: 0.4rem; font-size: var(--text-base); color: var(--content-1); }
+@media (max-width: 560px) {
+  .meet-card { flex-direction: column; }
+  .meet-card__art { width: 64px; height: 64px; }
+}
+
+/* Says what the next few minutes look like, so "Begin" is not a blind step. */
+.flow-note { margin-top: 1.1rem; font-size: var(--text-sm); }

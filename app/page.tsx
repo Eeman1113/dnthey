@@ -67,6 +67,10 @@ export default function TitlePage() {
           </Link>
           <ContinueButton />
         </div>
+
+        <p className="meta-quiet flow-note">
+          Make a character, meet the party, then play. Everything runs on this device.
+        </p>
       </div>
 
       <footer className="gutter py-6">
